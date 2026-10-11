@@ -7,7 +7,7 @@
     "dev": "node --experimental-strip-types --watch src/server.ts",
     "start": "node --experimental-strip-types src/server.ts",
     "test": "node --experimental-strip-types --test test/*.test.ts",
-    "check": "node --experimental-strip-types --check src/app.ts && node --experimental-strip-types --check src/server.ts"
+    "check": "node --experimental-strip-types --check src/app.ts && node --experimental-strip-types --check src/server.ts && node --experimental-strip-types --check src/lead-mapping.ts"
   },
   "engines": {
     "node": ">=22"

@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-`src/app.ts` creates a Node HTTP server with `GET /health`; `src/server.ts` starts it on localhost. `test/health.test.ts` tests the route over local HTTP. Node 22 strips TypeScript syntax at runtime, and npm scripts run the server and test. There is no database connection, frontend, model call, agent framework, authentication, or production deployment. Static TypeScript checking is not yet configured because package downloads failed in this environment.
+`src/app.ts` creates a Node HTTP server with `GET /health`; `src/server.ts` starts it on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. `test/health.test.ts` tests the route over local HTTP, and `test/lead-mapping.test.ts` checks the mapper. Node 22 strips TypeScript syntax at runtime, and npm scripts run the server and tests. There is no database connection, frontend, model call, agent framework, authentication, or production deployment. Static TypeScript checking is not yet configured because package downloads failed in this environment.
 
 ## Intended system
 

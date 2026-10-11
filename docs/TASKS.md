@@ -2,7 +2,7 @@
 
 This is the practical to-do list. **Each checkbox is one small task** to implement, test, explain, and record in `progress.md` before starting another. Route names and pages below describe the intended prototype; none exists unless checked. The selected demo account model is one seeded sales-manager account, with no public sign-up. The dataset, LLM provider, and exact database columns still require inspection before those tasks start.
 
-**Status:** `[x]` done; `[ ]` planned; `[ ] (blocked)` needs the stated dependency. Phase summaries are in [ROADMAP.md](ROADMAP.md). The next product task is **D01**.
+**Status:** `[x]` done; `[ ]` planned; `[ ] (blocked)` needs the stated dependency. Phase summaries are in [ROADMAP.md](ROADMAP.md). The next task is **D03**. Dataset license remains unconfirmed; see [DATASET_AUDIT.md](DATASET_AUDIT.md).
 
 ## Phase 0 — Audit
 
@@ -25,11 +25,11 @@ This is the practical to-do list. **Each checkbox is one small task** to impleme
 
 ### Dataset and database
 
-- [ ] **D01 — Inspect LeadsBlue.** Obtain a small permitted sample; record license, actual columns, missing values, duplicates, and personal-data concerns. Done: a short findings note identifies usable fields. **Dependency:** sample is not in the workspace.
-- [ ] **D02 — Define `Lead` input mapping.** Map observed source columns to a small lead structure and reject unusable rows. Done: fixtures show valid, missing, and malformed values.
+- [x] **D01 — Inspect LeadsBlue.** Inspect the supplied CSV's actual columns, missing values, duplicates, and personal-data concerns. Done: [audit note](DATASET_AUDIT.md) records observed fields and an unresolved license. No raw data was imported.
+- [x] **D02 — Define `Lead` input mapping.** `mapLeadRow` maps the five observed columns to `LeadInput`, keeps blank industry as `null`, and rejects unusable rows with field-level errors. Done: synthetic fixtures cover valid, missing, and malformed values.
 - [ ] **D03 — Connect PostgreSQL.** Configure a local connection outside source control and add a read-only connection check. Done: check succeeds and a bad URL fails clearly.
 - [ ] **D04 — Create the `leads` table.** Add a migration with lead ID, source key, known fields, and uniqueness based on observed data. Done: migration runs on an empty database and a duplicate insert is handled.
-- [ ] **D05 — Import a tiny safe dataset.** Load synthetic or anonymized leads through D02 into D04. Done: counts and rejected rows are reported; rerunning adds no duplicates.
+- [ ] **D05 — Import a tiny safe dataset.** Load synthetic or anonymized leads through D02 into D04. Done: counts and rejected rows are reported; rerunning adds no duplicates. The supplied raw CSV requires separate license confirmation before any use beyond schema inspection.
 - [ ] **D06 — List leads.** Add `GET /api/leads` with a small page limit. Done: route test checks response shape and bounded results.
 - [ ] **D07 — View one lead.** Add `GET /api/leads/:leadId`. Done: existing ID returns details; unknown ID returns 404.
 - [ ] **D08 — Create one lead.** Add validated `POST /api/leads` for demo records. Done: valid input persists; invalid input returns 400; duplicate key is handled.

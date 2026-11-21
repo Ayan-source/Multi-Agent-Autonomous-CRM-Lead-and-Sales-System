@@ -1,14 +1,11 @@
-import { createServer } from "node:http";
+import express from "express";
 
 export function buildApp() {
-  return createServer((request, response) => {
-    if (request.method === "GET" && request.url === "/health") {
-      response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({ status: "ok" }));
-      return;
-    }
+  const app = express();
 
-    response.writeHead(404, { "content-type": "application/json" });
-    response.end(JSON.stringify({ error: "Not found" }));
+  app.get("/health", (_request, response) => {
+    response.json({ status: "ok" });
   });
+
+  return app;
 }

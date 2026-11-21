@@ -1,21 +1,26 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import type { AddressInfo } from "node:net";
-import { buildApp } from "../src/app.ts";
+import type { Server } from "node:http";
+import { buildApp } from "../src/app.js";
 
 const app = buildApp();
+let server: Server;
 let baseUrl: string;
 
 before(async () => {
-  await new Promise<void>((resolve) => {
-    app.listen(0, "127.0.0.1", resolve);
+  await new Promise<void>((resolve, reject) => {
+    server = app.listen(0, "127.0.0.1", (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
   });
-  baseUrl = `http://127.0.0.1:${(app.address() as AddressInfo).port}`;
+  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
 
 after(async () => {
   await new Promise<void>((resolve, reject) => {
-    app.close((error) => (error ? reject(error) : resolve()));
+    server.close((error) => (error ? reject(error) : resolve()));
   });
 });
 

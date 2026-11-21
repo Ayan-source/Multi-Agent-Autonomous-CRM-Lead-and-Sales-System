@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mapLeadRow } from "../src/lead-mapping.ts";
+import { mapLeadRow } from "../src/lead-mapping.js";
 
 const syntheticRow = {
   "Decision Maker Name": "  Alex Example  ",

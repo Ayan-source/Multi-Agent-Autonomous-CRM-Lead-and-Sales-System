@@ -38,4 +38,4 @@ The final course demo is acceptable when a sales manager can sign in, enter a bu
 
 ## Current state and source of truth
 
-As of 2026-10-11, only a minimal local API with `GET /health` exists. No dataset, database, LLM, agent, dashboard, or outreach capability is implemented. This PRD condenses `prompt.md` and the two proposal documents in the repository; `prompt.md` controls the staged development and simulated-outreach approach where the proposals differ. Task status lives in [ROADMAP.md](ROADMAP.md) and the small steps in [TASKS.md](TASKS.md).
+As reviewed on 2026-11-21, an Express/TypeScript API with `GET /health`, a tested lead mapper, and a supplied CSV audit exist. Database, authentication, LLM, agents, dashboard, and outreach remain planned. Docker Compose is approved for PostgreSQL with pgvector; Express and React use local npm commands. This PRD condenses `prompt.md` and the two proposal documents in the repository; `prompt.md` controls the staged development and simulated-outreach approach where the proposals differ. Task status lives in [ROADMAP.md](ROADMAP.md) and the small steps in [TASKS.md](TASKS.md).

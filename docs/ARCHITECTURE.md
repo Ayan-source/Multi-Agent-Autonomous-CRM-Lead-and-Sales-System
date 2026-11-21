@@ -2,9 +2,15 @@
 
 ## Current implementation
 
-`src/app.ts` creates a Node HTTP server with `GET /health`; `src/server.ts` starts it on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. `test/health.test.ts` tests the route over local HTTP, and `test/lead-mapping.test.ts` checks the mapper. Node 22 strips TypeScript syntax at runtime, and npm scripts run the server and tests. There is no database connection, frontend, model call, agent framework, authentication, or production deployment. Static TypeScript checking is not yet configured because package downloads failed in this environment.
+`src/app.ts` defines an Express app with `GET /health`; `src/server.ts` starts it on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. `test/health.test.ts` tests the route over local HTTP, and `test/lead-mapping.test.ts` checks the mapper. The repository has npm scripts, a dependency lockfile, and TypeScript configuration. The user installed dependencies locally; the Express route test, TypeScript check, and build pass. There is no database connection, frontend, model call, agent framework, authentication, or production deployment.
 
 ## Intended system
+
+### Local development decision
+
+Use Docker Compose for PostgreSQL with pgvector, with a versioned image, named persistent volume, localhost port, and health check. Express and React run locally through npm. DB01 introduces `compose.yaml`; D03 connects the backend. Docker setup is approved but not implemented. The Compose command workflow follows the [Docker documentation](https://docs.docker.com/compose/gettingstarted/), and image selection will follow the [pgvector Docker instructions](https://github.com/pgvector/pgvector#docker).
+
+Use a separate database for integration tests. Run migrations before seeding; record applied migrations and avoid resetting development data during tests.
 
 ```text
 React dashboard (planned)
@@ -25,6 +31,8 @@ Use one Node/TypeScript backend for routes, validation, authentication, determin
 The demo will have one seeded sales-manager account, password hashes, and server-side sessions carried by an HTTP-only cookie. Planned routes are `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`; CRM and workflow routes require a session. There is no public registration route. This is a proposed design, not implemented authentication.
 
 Start the flow as plain functions and explicit data structures. Add LangGraph JS when branching, shared state, retries, and pause/resume for human review are implemented. A graph node should have one clear responsibility and return validated state updates. The LLM provider and model remain undecided until a task needs them; external calls should sit behind small adapters so tests can use fixed responses.
+
+The graph must eventually connect all six responsibilities below, including outreach, reply classification, and CRM updates. O06-O08 complete those connections after their services exist. Persist graph checkpoints and run records in PostgreSQL. Starting a run returns its ID promptly; execution continues independently of the HTTP response, with bounded steps/model calls and restart recovery. A resume request references a stored human decision and must be safe to repeat. Record actual tool calls and decisions so the demo can show how agents cooperate.
 
 ## Responsibilities and data flow
 

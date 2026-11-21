@@ -2,18 +2,21 @@
 
 This page tracks phases and status. [TASKS.md](TASKS.md) contains the small, independently verifiable tasks in each phase. Complete one task, test it, update `progress.md`, then wait for approval before starting the next. Later tasks can be revised when the dataset and development environment are known.
 
+Commit after every mini task. After a successful commit and user review, remind the user to push manually; repeat that reminder at each phase checkpoint. A failed commit must be resolved before calling the changes ready to push.
+
+**Reviewed development order:** F04 -> F05 -> DB01 (Docker database) -> D03-D05 -> DB02 (isolated database tests) -> AU01-AU06 -> D06-D10 -> phases 3-9. Express and React keep their normal npm workflow. LangGraph first coordinates ICP/discovery/qualification in phase 6, then gains outreach, response, and CRM nodes in O06-O08. GitHub automated checks are E04.
+
 | Phase | Outcome | Status | Key dependency |
 | --- | --- | --- | --- |
-| 0. Audit | Inspect proposals and empty repository; choose a practical direction. | Complete | None |
-| 1. Foundation | Runnable API, basic documentation, and development checks. | In progress | npm package access for static type checking |
-| 2. Data, access, and CRM API | Inspect dataset; set up PostgreSQL, login/logout, and lead routes. | Planned | Dataset sample, package access, and usable PostgreSQL |
+| 0. Audit | Inspect proposals and supplied dataset; define lead input mapping. | Complete | Dataset license still unconfirmed |
+| 1. Foundation | Runnable API, basic documentation, and development checks. | In progress | Configuration validation (F04), request/error handling (F05) |
+| 2. Data, access, and CRM API | Docker PostgreSQL, isolated database tests, login/logout, and protected lead routes. | Planned | Docker Desktop/Compose, package access |
 | 3. Business profile and ICP | Accept profile and generate validated ICP. | Planned | CRM foundation and LLM access |
 | 4. Discovery and qualification | Find and explain suitable leads; flag uncertainty. | Planned | Verified dataset fields and ICP |
 | 5. Retrieval and memory | Retrieve relevant business facts for grounded generation. | Planned | Business documents, embeddings, pgvector |
 | 6. Workflow orchestration | Connect steps with shared state and review routing. | Planned | Tested individual steps |
 | 7. Outreach and replies | Draft messages, simulate responses, enforce opt-outs. | Planned | Qualification, retrieval, review flow |
 | 8. CRM dashboard | Persist outcomes and show the funnel and review queue. | Planned | CRM records and workflow events |
-| 9. Evaluation and hardening | Measure quality, reliability, cost, and baseline results. | Planned | Working end-to-end flow |
-| 10. Demo and release | Reproducible scenario, report, and deployment decision. | Planned | Evaluated prototype |
+| 9. Evaluation and final demo | Measure quality, reliability, cost, and baseline results; rehearse a reproducible demo and decide deployment. | Planned | Working end-to-end flow |
 
-**Current milestone:** F01 (minimal API), F02 (core project documents), D01 (CSV schema/quality audit), and D02 (validated lead input mapping) are complete. F03 (static type checking) depends on package access. The next task is D03, establishing a local PostgreSQL connection; it needs a reachable database and a PostgreSQL client dependency. The Kaggle dataset's license is still unconfirmed, so the supplied raw contact records must not be imported or used in the demo. No authentication, database, model, agent, frontend, or outreach implementation is complete.
+**Current milestone:** F01 (minimal API), F02 (core project documents), F03 (Express and TypeScript verification), D01 (CSV schema/quality audit), and D02 (validated lead input mapping) are complete. The Express backend builds and its four tests pass. Review F03 before starting another task; F04 (configuration validation) is the next foundation task, followed by D03 (local PostgreSQL connection). The Kaggle dataset's license is still unconfirmed, so the supplied raw contact records must not be imported or used in the demo. No authentication, database, model, agent, frontend, or outreach implementation is complete.

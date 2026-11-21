@@ -1,156 +1,752 @@
-# SalesGenie AI — Build checklist
+# SalesGenie AI: implementation checklist
 
-This is the practical to-do list. **Each checkbox is one small task** to implement, test, explain, and record in `progress.md` before starting another. Route names and pages below describe the intended prototype; none exists unless checked. The selected demo account model is one seeded sales-manager account, with no public sign-up. The dataset, LLM provider, and exact database columns still require inspection before those tasks start.
+**Project:** A sales manager enters a business profile, reviews an AI-generated ideal customer profile (ICP), finds and qualifies leads, reviews outreach drafts, simulates replies, and sees the CRM record and dashboard update.
 
-**Status:** `[x]` done; `[ ]` planned; `[ ] (blocked)` needs the stated dependency. Phase summaries are in [ROADMAP.md](ROADMAP.md). The next task is **D03**. Dataset license remains unconfirmed; see [DATASET_AUDIT.md](DATASET_AUDIT.md).
+**Stack:** Node.js + Express + TypeScript API, PostgreSQL, React frontend (PERN). LangChain JS will handle model prompts, structured output, and retrieval tools. LangGraph JS will coordinate the multi-step workflow. Neither AI library is installed yet.
 
-## Phase 0 — Audit
+**Docker decision:** Run PostgreSQL with pgvector in Docker Compose. Run Express and React locally with npm. Docker configuration is planned in DB01; no container has been configured yet.
 
-**Visible result:** A clear picture of what exists before coding.
+**Status:** `[x]` completed; `[ ]` still to do. Start with **F04**, after review of completed **F03**. The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
 
-- [x] **A01 — Inspect the starting project.** Read the proposals, list existing code and tools, and report gaps. Done: read-only audit completed.
+## How to use this file
 
-## Phase 1 — Project foundation
+Each **ID is one review and commit checkpoint**. Complete its small checkboxes, run its acceptance check, update `progress.md`, commit that ID, and ask for review before starting the next ID. Do not mark a task complete merely because the code exists. Phase commands at the end of each phase are a final check after its IDs are complete. Commands marked **planned** need their npm scripts created in the named task; they cannot run yet.
 
-**Visible result:** The API starts locally and has repeatable checks.
+**GitHub rule:** Commit each completed mini task locally. After its checks pass, its commit succeeds, and the user reviews it, say **"Ready to push to GitHub"**. The user pushes manually; also remind them at each completed phase. If a commit fails, report the blocker before calling it ready to push. Use `git status` and `git log -1 --oneline` to inspect the checkpoint, then `git push` on a branch with an upstream. For the first push, use `git push -u origin <branch-name>` after configuring the remote. Keep progress entries to one short result and any blocker.
 
-- [x] **F01 — Start the API.** Create `GET /health`, a server entry point, npm scripts, and an HTTP test. Done: one test and syntax check pass.
-- [x] **F02 — Write project documents.** Add PRD, architecture, roadmap, this checklist, and a simple progress log. Done: documents are present and linked.
-- [ ] **F03 — Add static TypeScript checking.** Install a compiler, add a `typecheck` script, and run it on source and tests. Done: command passes locally. **Blocked:** npm package downloads currently fail.
-- [ ] **F04 — Add configuration validation.** Create `.env.example` with placeholder names for the first service used; reject missing/invalid settings at startup. Done: valid and invalid configuration examples are checked.
+Current commands (from the repository root):
 
-## Phase 2 — Dataset, PostgreSQL, authentication, and lead API
+```powershell
+npm install
+npm run dev       # Start Express on http://127.0.0.1:3000
+npm test          # Build, then run tests
+npm run check     # TypeScript type check
+npm run build     # Compile to dist/
+npm start         # Start compiled API after build
+```
 
-**Visible result:** A manager can sign in and work with a small, safe list of stored leads.
+The `npm run dev` script uses `tsx watch`; this workspace's Node runtime currently cannot provide `os.userInfo()`, so this particular script needs checking in the user's own terminal. The build and compiled HTTP test pass here.
 
-### Dataset and database
+## Phase 0: Project and dataset audit
 
-- [x] **D01 — Inspect LeadsBlue.** Inspect the supplied CSV's actual columns, missing values, duplicates, and personal-data concerns. Done: [audit note](DATASET_AUDIT.md) records observed fields and an unresolved license. No raw data was imported.
-- [x] **D02 — Define `Lead` input mapping.** `mapLeadRow` maps the five observed columns to `LeadInput`, keeps blank industry as `null`, and rejects unusable rows with field-level errors. Done: synthetic fixtures cover valid, missing, and malformed values.
-- [ ] **D03 — Connect PostgreSQL.** Configure a local connection outside source control and add a read-only connection check. Done: check succeeds and a bad URL fails clearly.
-- [ ] **D04 — Create the `leads` table.** Add a migration with lead ID, source key, known fields, and uniqueness based on observed data. Done: migration runs on an empty database and a duplicate insert is handled.
-- [ ] **D05 — Import a tiny safe dataset.** Load synthetic or anonymized leads through D02 into D04. Done: counts and rejected rows are reported; rerunning adds no duplicates. The supplied raw CSV requires separate license confirmation before any use beyond schema inspection.
-- [ ] **D06 — List leads.** Add `GET /api/leads` with a small page limit. Done: route test checks response shape and bounded results.
-- [ ] **D07 — View one lead.** Add `GET /api/leads/:leadId`. Done: existing ID returns details; unknown ID returns 404.
-- [ ] **D08 — Create one lead.** Add validated `POST /api/leads` for demo records. Done: valid input persists; invalid input returns 400; duplicate key is handled.
-- [ ] **D09 — Edit one lead.** Add validated `PATCH /api/leads/:leadId` for allowed fields. Done: changed fields persist; unknown ID and invalid input are tested.
-- [ ] **D10 — Store one CRM activity.** Add an `activities` table and a write function with an idempotency key. Done: repeating the same action stores one row.
+**Goal:** Know what was supplied and which data can be used.
 
-### Login and protected access
+### A01: Inspect the starting project [x]
 
-- [ ] **AU01 — Store demo user and sessions.** Migrate `users` and `sessions` tables; store password hashes, not passwords. Done: migration and repository tests pass.
-- [ ] **AU02 — Seed one manager account.** Provide a local setup command that reads the password from an environment variable. Done: rerun does not duplicate the user and no password enters Git or logs.
-- [ ] **AU03 — Login route.** Add `POST /api/auth/login` with email/password; create an HTTP-only session cookie on success. Done: good credentials work; wrong or missing credentials fail without revealing which field was wrong.
-- [ ] **AU04 — Current-user route.** Add `GET /api/auth/me`. Done: valid session returns the manager identity; no or expired session returns 401.
-- [ ] **AU05 — Logout route.** Add `POST /api/auth/logout`; invalidate the session and clear the cookie. Done: the old cookie cannot call `/api/auth/me` afterward.
-- [ ] **AU06 — Protect existing lead routes.** Add a session guard and make it the default for new CRM/workflow routes; leave `/health` public. Done: anonymous lead requests get 401 and authenticated requests work.
+- [x] Read the proposal and project instructions.
+- [x] List existing files, runtime, and missing services.
+- [x] Record a practical implementation order.
 
-## Phase 3 — Business profile and ICP
+**Acceptance:** A short project audit identifies the current code and gaps.
 
-**Visible result:** A manager can enter a business profile and inspect its generated customer profile.
+### D01: Inspect the supplied dataset [x]
 
-- [ ] **I01 — Validate `BusinessProfile`.** Define description, target industries, regions, size, and optional notes. Done: empty/invalid inputs are rejected in tests.
-- [ ] **I02 — Save a profile.** Add `POST /api/business-profiles`. Done: a valid profile is stored for the signed-in user; invalid input returns 400.
-- [ ] **I03 — Read a profile.** Add `GET /api/business-profiles/:profileId`. Done: saved profile returns; missing ID gives 404.
-- [ ] **I04 — Add the LangChain model adapter.** One function sends a model request; tests replace it with a fake. Done: no paid API call is required for tests. **Dependency:** package access and provider credentials for live use.
-- [ ] **I05 — Write the ICP prompt.** Ask the model to derive only supported customer traits from a profile and explain uncertainty. Done: prompt fixtures contain the right profile facts and no secrets.
-- [ ] **I06 — Validate structured ICP output.** Parse target traits, rationale, and unknowns from model output. Done: malformed or unsupported output does not enter CRM state.
-- [ ] **I07 — Generate an ICP.** Add `POST /api/business-profiles/:profileId/icps` using I04–I06. Done: mocked model creates a validated ICP or a clear failure/review result.
-- [ ] **I08 — View ICP history.** Add `GET /api/business-profiles/:profileId/icps`. Done: stored versions can be read in order.
-- [ ] **I09 — Select an ICP.** Save which validated version downstream work should use. Done: candidate search uses the selected version after a new one is generated.
+- [x] Record the actual CSV header, row count, missing values, and duplicate counts.
+- [x] Record privacy and license limits without copying contacts into documentation.
+- [x] Ignore the raw CSV in Git.
 
-## Phase 4 — Find and qualify leads
+**Acceptance:** `docs/DATASET_AUDIT.md` contains the observations and the unresolved license.
 
-**Visible result:** Each candidate has a score, reason, and a review decision when uncertain.
+### D02: Map one lead row [x]
 
-- [ ] **L01 — Match leads to an ICP.** Write a dataset/CRM search function using only verified fields. Done: fixtures show matched and excluded lead IDs with reasons.
-- [ ] **L02 — Expose candidates.** Add `GET /api/icps/:icpId/candidates` with a limit. Done: route returns lead IDs and match evidence; unknown ICP gives 404.
-- [ ] **L03 — Score one lead with rules.** Define score factors separately from model prompts. Done: tests show each factor's contribution and missing-field behavior.
-- [ ] **L04 — Assign fit category.** Convert the score to High, Medium, or Low Fit and mark borderline values. Done: exact threshold boundaries are tested.
-- [ ] **L05 — Add optional LLM reasoning.** Ask the model to explain only uncertain scores using given evidence. Done: mocked output is validated and cannot invent lead facts or silently replace the rule score.
-- [ ] **L06 — Save qualification.** Add `POST /api/leads/:leadId/qualifications` for a chosen ICP. Done: score, category, explanation, and source run are stored without duplicate retries.
-- [ ] **L07 — Queue uncertain leads.** Create a review item for borderline/conflicting cases. Done: such a lead cannot enter outreach until reviewed.
+- [x] Define `LeadInput` from the five observed fields.
+- [x] Trim values, normalize email, and keep missing industry as unknown.
+- [x] Return field-level errors for unusable data.
+- [x] Test with synthetic valid and invalid rows.
 
-## Phase 5 — RAG and knowledge retrieval
+**Acceptance:** The mapper does not invent company or domain data; its tests pass.
 
-**Visible result:** A draft can cite relevant product facts retrieved from known documents.
+**Phase check (available now):**
 
-- [ ] **R01 — Select business knowledge.** Add a few authorized product facts or guidelines as local demo documents. Done: each document has a source label and no contact-data dump.
-- [ ] **R02 — Split documents into chunks.** Keep chunk text, document ID, and location. Done: a test can trace retrieved text back to its source.
-- [ ] **R03 — Create pgvector storage.** Migrate document/chunk/embedding tables in PostgreSQL. Done: extension and migration run in the chosen environment.
-- [ ] **R04 — Generate embeddings.** Add an embedding adapter and idempotent chunk ingestion. Done: fake-embedding tests pass and re-ingestion does not duplicate chunks.
-- [ ] **R05 — Build `retrieveKnowledge` tool.** Search for the most relevant chunks for a lead/product question. Done: a relevant fixture ranks above an unrelated one; no-match returns an empty result.
-- [ ] **R06 — Check grounding.** Pass retrieved text and source IDs to a draft prompt; flag claims without support. Done: a test catches an invented product claim.
+```powershell
+npm test
+git check-ignore globalb2bdataset.csv
+```
 
-## Phase 6 — LangGraph workflow and tool calling
+## Phase 1: Express foundation
 
-**Visible result:** One run moves between agents and pauses when a person must decide.
+**Goal:** A normal npm-based Express API starts, builds, and can be checked.
 
-- [ ] **G01 — Define shared graph state.** Include profile ID, ICP ID, lead IDs, scores, review status, draft IDs, response status, and errors. Done: node input/output examples validate.
-- [ ] **G02 — Add ICP node.** Wrap the tested profile-to-ICP service in a LangGraph node. Done: a fixed profile updates graph state with an ICP ID.
-- [ ] **G03 — Add lead-finding node.** Call the tested candidate search and append lead IDs to state. Done: graph test shows the selected IDs.
-- [ ] **G04 — Add qualification node.** Score candidates and store outcomes. Done: graph test covers high, low, and uncertain results.
-- [ ] **G05 — Wire conditional edges.** Route high-fit leads to `draft_ready`, low-fit leads to finish, and uncertain leads to review. Done: all three graph paths are tested; outreach is attached later.
-- [ ] **G06 — Add `findLeads` tool.** Wrap L01 with a validated input/output contract. Done: mocked tool call returns candidate IDs.
-- [ ] **G07 — Add `scoreLead` tool.** Wrap L03/L04 with a validated contract. Done: mocked tool call returns score, category, and factors.
-- [ ] **G08 — Add `retrieveKnowledge` tool.** Wrap R05 with a validated contract. Done: mocked tool call returns chunks and source IDs.
-- [ ] **G09 — Add `saveCrmActivity` tool.** Wrap D10 with a validated contract. Done: retry test stores one activity.
-- [ ] **G10 — Bound failures.** Add timeouts/retry limits around model and external calls. Done: transient failure retries; persistent failure stops with a visible status.
-- [ ] **G11 — Pause for human review.** Save graph state before review and resume once on a valid decision. Done: restart/resume test does not repeat a CRM action.
-- [ ] **G12 — Start a run.** Add `POST /api/workflows` with a profile/ICP selection. Done: it returns a run ID; invalid input fails without starting work.
-- [ ] **G13 — Inspect a run.** Add `GET /api/workflows/:runId` with stage, outcome, and safe event history. Done: user can see progress and failure without exposed secrets.
+### F01: Minimal API [x]
 
-## Phase 7 — Outreach drafts and simulated replies
+- [x] Create `src/app.ts` and `src/server.ts`.
+- [x] Add `GET /health` returning `{"status":"ok"}`.
+- [x] Add an HTTP route test.
 
-**Visible result:** A manager reviews a draft, simulates a reply, and sees opt-outs enforced.
+**Acceptance:** The health request returns HTTP 200 and the expected JSON.
 
-- [ ] **O01 — Draft from facts.** Build an outreach prompt using approved lead facts, ICP, and retrieved source text. Done: mocked output is specific and names its supporting sources.
-- [ ] **O02 — Validate the draft.** Reject missing subject/body, invented claims, and unprofessional output. Done: good and bad fixtures route correctly.
-- [ ] **O03 — Save a draft.** Add `POST /api/leads/:leadId/outreach-drafts`. Done: draft is stored as `pending_review`; no message is sent.
-- [ ] **O04 — List drafts.** Add `GET /api/leads/:leadId/outreach-drafts`. Done: reviewer sees draft IDs and review status for a lead.
-- [ ] **O05 — View one draft.** Add `GET /api/outreach-drafts/:draftId`. Done: reviewer sees content and source references; unknown ID returns 404.
-- [ ] **O06 — Review a draft.** Add `PATCH /api/outreach-drafts/:draftId/review` for approve/reject. Done: only a signed-in reviewer can decide; duplicate decisions do not duplicate activity.
-- [ ] **O07 — Simulate outreach.** Mark an approved draft as simulated-contact activity. Done: activity is labeled simulated and no email/SMS API is called.
-- [ ] **O08 — Submit a simulated reply.** Add `POST /api/leads/:leadId/responses`. Done: reply text is saved and tied to the correct lead/activity.
-- [ ] **O09 — Classify a reply.** Assign Interested, Not Interested, Follow-up Required, Unsubscribe, or review-needed. Done: fixed examples and ambiguity are tested.
-- [ ] **O10 — Enforce unsubscribe.** Add a suppression record when reply means opt-out. Done: future drafting and simulated contact are blocked for that lead across runs.
-- [ ] **O11 — Decide follow-up.** Create a review task for eligible follow-up; do not send automatically. Done: no-response, ambiguous, and opt-out examples route safely.
+### F02: Project documents [x]
 
-## Phase 8 — CRM views and dashboard
+- [x] Add product requirements, architecture, roadmap, task list, and progress log.
+- [x] Link them from the README.
 
-**Visible result:** A signed-in manager can follow the sales funnel and review items in a browser.
+**Acceptance:** A new developer can find the goal, stack, tasks, and current status.
 
-- [ ] **C01 — Extend CRM activity types.** Use D10 to record qualification, draft, simulated contact, reply, and review events. Done: each event appears once in a lead timeline.
-- [ ] **C02 — Show lead timeline.** Add `GET /api/leads/:leadId/activities`. Done: ordered history and current status match stored events.
-- [ ] **C03 — Calculate dashboard counts.** Add `GET /api/dashboard/summary` for totals, qualified, contacted, replies, opportunities, and review queue. Done: seeded fixtures give expected counts and simulated labels.
-- [ ] **C04 — Create React shell.** Add navigation, API client, and protected layout. Done: it loads locally and sends the session cookie to the API.
-- [ ] **C05 — Build login page.** Add form using `POST /api/auth/login`. Done: valid login reaches the dashboard; invalid login shows an error.
-- [ ] **C06 — Restore browser session.** Call `GET /api/auth/me` on page load. Done: refresh stays signed in while session is valid and redirects when expired.
-- [ ] **C07 — Add logout control.** Call `POST /api/auth/logout` and clear client state. Done: browser returns to login and protected pages no longer load.
-- [ ] **C08 — Build profile form.** Enter and view business profile and its ICP. Done: invalid fields are visible; accepted profile/ICP can be revisited.
-- [ ] **C09 — Build leads table/detail.** Show candidates, scores, explanations, and timeline. Done: reviewer can inspect one lead without raw database access.
-- [ ] **C10 — Build review queue.** Show uncertain leads and drafts with approve/reject controls. Done: action updates the right item after refresh.
-- [ ] **C11 — Build dashboard and run view.** Show funnel counts, simulated outcome labels, graph stage, and errors. Done: values match the API and one demo run is understandable.
+### F03: Express and TypeScript setup [x]
 
-## Phase 9 — Evaluation and hardening
+- [x] Add Express and TypeScript dependencies and `package-lock.json`.
+- [x] Configure `tsconfig.json` and npm scripts.
+- [x] Replace the temporary native HTTP server with `express()` and `app.listen()`.
+- [x] Compile and run the route and mapper tests.
 
-**Visible result:** A report shows what worked, how well, and where the prototype fails.
+**Acceptance:** `npm run check`, `npm run build`, and `npm test` pass (4 tests).
 
-- [ ] **E01 — Label a lead-fit sample.** Record human labels and split into development/test groups. Done: test labels are not placed in prompts.
-- [ ] **E02 — Calculate qualification metrics.** Script precision, recall, F1, and accuracy on held-out examples. Done: repeatable output includes the counts behind each metric.
-- [ ] **E03 — Compare rule-only baseline.** Run the same test set through rule scoring and the full flow. Done: report uses the same labels and explains differences.
-- [ ] **E04 — Score outreach quality.** Use a small human rubric for relevance, personalization, factual support, tone, and call to action. Done: scored examples and method are saved.
-- [ ] **E05 — Run failure cases.** Cover missing email/company, duplicate leads, bad model output, database failure, retry, ambiguous reply, and unsubscribe. Done: each case has an observed safe outcome.
-- [ ] **E06 — Measure execution.** Capture duration, model calls, estimated cost per lead, and failure count. Done: report separates observed measurements from simulated conversion results.
-- [ ] **E07 — Review security.** Verify protected routes, session expiry, input validation, secret handling, and privacy-safe logs. Done: issues are fixed or explicitly documented.
+### F04: Configuration validation [ ]
 
-## Phase 10 — Final demo and report
+- [ ] Add `.env.example` with placeholder names for the first service used.
+- [ ] Parse `PORT` safely and report an invalid value at startup.
+- [ ] Keep actual credentials outside Git; add a focused valid/invalid config check.
 
-**Visible result:** The course evaluator can repeat the full simulated workflow.
+**Acceptance:** Valid settings start the API; invalid settings give a clear error.
 
-- [ ] **P01 — Seed a synthetic demo.** Provide a repeatable setup command for one business, knowledge documents, and safe leads. Done: reset/reseed produces the same starting state.
-- [ ] **P02 — Rehearse one end-to-end run.** Profile → ICP → leads → scores → draft review → simulated reply → CRM/dashboard. Done: exact steps and observed output are recorded.
-- [ ] **P03 — Write evaluation report.** Include qualification metrics, outreach rubric, reliability/cost, baseline, and limitations. Done: every reported number has a source or is labeled simulated.
-- [ ] **P04 — Decide deployment.** If needed for the course, document and verify a suitable host; otherwise document local demo setup. Done: evaluator can reproduce the demo.
+### F05: Request parsing and API errors [ ]
 
-**Working rule:** Finish only one unchecked item at a time. For that item, explain the concept, implement it, run relevant tests, update `progress.md`, and stop for approval before the next item.
+- [ ] Add bounded JSON body parsing and a consistent validation/error response shape.
+- [ ] Handle unknown routes and unexpected errors without returning stack traces.
+- [ ] Test malformed JSON, an oversized body, and an unknown route.
+
+**Acceptance:** Invalid requests return clear 4xx responses; unexpected errors return a safe 500 response.
+
+**Phase check (available now except F04's new test):**
+
+```powershell
+npm run check
+npm test
+npm run build
+npm start
+# In another terminal: Invoke-RestMethod http://127.0.0.1:3000/health
+```
+
+## Phase 2: PostgreSQL, leads, and authentication
+
+**Goal:** A manager can sign in and work with stored demo leads.
+
+**Order:** DB01 -> D03 -> D04 -> D05 -> DB02 -> AU01-AU06 -> D06-D10. Authentication is ready before lead routes are exposed; AU06 installs the guard that each lead route must use.
+
+### DB01: Docker database [ ]
+
+- [ ] Confirm Docker Desktop and Docker Compose are available on the user's machine.
+- [ ] Add `compose.yaml` with a `db` service using an explicitly versioned pgvector/PostgreSQL image.
+- [ ] Configure placeholder environment settings, a localhost database port, a named data volume, and a database health check.
+- [ ] Document start, status, logs, and stop commands; stop without deleting the volume.
+
+**Acceptance:** Container becomes healthy and a test record survives a stop/start cycle.
+
+### D03: Connect PostgreSQL [ ]
+
+- [ ] Install the PostgreSQL client dependency and add `DATABASE_URL` to `.env.example`.
+- [ ] Create a connection pool in one backend module.
+- [ ] Add a read-only `db:check` script and a clear error for a bad URL.
+
+**Acceptance:** The check connects to a local database and rejects an invalid URL.
+
+### D04: Create the leads table [ ]
+
+- [ ] Add a SQL migration for ID, source key, name, email, country, industry, job title, and timestamps.
+- [ ] Add a uniqueness rule based on the real source key or normalized email.
+- [ ] Add a `db:migrate` script and test a duplicate insert.
+
+**Acceptance:** Migration succeeds on an empty database and duplicate handling is clear.
+
+### D05: Seed safe demo leads [ ]
+
+- [ ] Make a tiny synthetic or anonymized fixture.
+- [ ] Pass each row through `mapLeadRow` before writing it.
+- [ ] Add `db:seed`; report inserted and rejected counts; make reruns safe.
+
+**Acceptance:** Seeded leads can be queried and rerunning does not duplicate them.
+
+### DB02: Database integration test setup [ ]
+
+- [ ] Configure a separate test database and a `test:db` script.
+- [ ] Apply migrations and seed synthetic fixtures in that database only.
+- [ ] Test migration reruns and cleanup without touching development data.
+
+**Acceptance:** Database tests are repeatable and cannot reset the development database.
+
+### D06: List leads [ ]
+
+- [ ] Add `GET /api/leads` with a small bounded `limit` and pagination cursor/offset.
+- [ ] Return stable IDs and only intended public fields.
+- [ ] Test empty, populated, and excessive-limit requests.
+
+**Acceptance:** Results are paginated and the maximum page size is enforced.
+
+### D07: Read one lead [ ]
+
+- [ ] Add `GET /api/leads/:leadId`.
+- [ ] Return 404 for an unknown ID.
+- [ ] Test a known and unknown ID.
+
+**Acceptance:** The route returns exactly one lead or 404.
+
+### D08: Create one lead [ ]
+
+- [ ] Add `POST /api/leads` for manual demo entry.
+- [ ] Validate the body and handle duplicate email/source key.
+- [ ] Test valid, invalid, and duplicate requests.
+
+**Acceptance:** Valid input persists; invalid input returns 400.
+
+### D09: Edit one lead [ ]
+
+- [ ] Add `PATCH /api/leads/:leadId` for approved editable fields.
+- [ ] Validate changes and update `updated_at`.
+- [ ] Test saved changes, invalid input, and an unknown ID.
+
+**Acceptance:** Allowed edits persist and other fields cannot be changed.
+
+### D10: Record a CRM activity [ ]
+
+- [ ] Migrate an `activities` table with lead ID, type, details, time, and idempotency key.
+- [ ] Add one write function for later agents and routes.
+- [ ] Test repeating the same action.
+
+**Acceptance:** A retry creates one activity row.
+
+### AU01: User and session tables [ ]
+
+- [ ] Migrate `users` and `sessions` tables.
+- [ ] Store password hashes and session token hashes, never plaintext values.
+- [ ] Test create, lookup, expiration, and deletion at the repository layer.
+
+**Acceptance:** Expired and deleted sessions cannot identify a user.
+
+### AU02: Seed one manager [ ]
+
+- [ ] Add `auth:seed` reading the initial password from an environment variable.
+- [ ] Hash the password and insert one manager email.
+- [ ] Make reruns safe and keep the password out of logs/Git.
+
+**Acceptance:** One manager exists after repeated seed runs.
+
+### AU03: Login [ ]
+
+- [ ] Add `POST /api/auth/login` accepting email and password.
+- [ ] Verify the hash and create a server-side session.
+- [ ] Set an HTTP-only session cookie; return a generic error for invalid credentials.
+- [ ] Test success, wrong password, missing fields, and cookie properties.
+
+**Acceptance:** Correct credentials produce a usable session; other requests do not.
+
+### AU04: Current session [ ]
+
+- [ ] Add `GET /api/auth/me`.
+- [ ] Look up the session from the cookie and return safe manager fields.
+- [ ] Test valid, missing, expired, and deleted sessions.
+
+**Acceptance:** Invalid sessions return 401.
+
+### AU05: Logout [ ]
+
+- [ ] Add `POST /api/auth/logout`.
+- [ ] Delete the server-side session and clear the cookie.
+- [ ] Test that the old cookie fails on `/api/auth/me`.
+
+**Acceptance:** Logout immediately revokes access.
+
+### AU06: Protect CRM routes [ ]
+
+- [ ] Add an Express session middleware for `/api/leads` and future CRM routes.
+- [ ] Keep `/health` public; register the guard before adding D06-D10 routes.
+- [ ] Add login attempt limiting and cookie settings for local versus hosted use; validate request origin for cookie-authenticated writes.
+- [ ] Test anonymous and authenticated calls.
+
+**Acceptance:** Anonymous CRM requests return 401.
+
+**Phase check (scripts added by D03-D05 and AU02):**
+
+```powershell
+docker compose up -d db  # planned in DB01
+docker compose ps
+npm run db:check       # planned in D03
+npm run db:migrate     # planned in D04
+npm run db:seed        # planned in D05
+npm run auth:seed      # planned in AU02
+npm run test:db        # planned in DB02
+npm run check
+npm test
+npm run build
+# Manually: login -> /api/auth/me -> list a lead -> logout -> /api/auth/me returns 401
+# When finished: docker compose stop db (keeps the data volume)
+```
+
+## Phase 3: Business profile, LangChain, and ICP
+
+**Goal:** Turn a manager's business description into a validated ICP.
+
+### I01: Validate business profiles [ ]
+
+- [ ] Define description, target industries, regions, company size, and notes.
+- [ ] Reject empty/invalid fields with field-specific errors.
+- [ ] Test valid and incomplete examples.
+
+**Acceptance:** Invalid profiles cannot enter the database.
+
+### I02: Save and read profiles [ ]
+
+- [ ] Migrate `business_profiles` with owner ID and timestamps.
+- [ ] Add `POST /api/business-profiles` and `GET /api/business-profiles/:profileId`.
+- [ ] Test owner access, validation, and unknown ID.
+
+**Acceptance:** A signed-in manager can revisit a saved profile.
+
+### I03: LangChain model adapter [ ]
+
+- [ ] Install LangChain JS and the chosen provider adapter; document required environment variables.
+- [ ] Create one model-calling function behind an interface.
+- [ ] Inject a fake model for tests; do not call a paid API during tests.
+- [ ] Set timeout and a bounded output size.
+
+**Acceptance:** A fixed fake response can be returned without provider credentials.
+
+### I04: ICP prompt [ ]
+
+- [ ] Build a prompt from a validated profile.
+- [ ] Ask for target industries, regions, size, job roles, rationale, and unknowns.
+- [ ] Instruct the model to use supplied facts and mark uncertainty.
+- [ ] Test that the prompt contains profile facts and no secrets.
+
+**Acceptance:** The prompt does not invent company facts before the model is called.
+
+### I05: Structured ICP output [ ]
+
+- [ ] Define and validate the model's JSON output schema.
+- [ ] Reject malformed output and unsupported traits.
+- [ ] Save the prompt/model version with each result.
+
+**Acceptance:** Bad model output cannot enter CRM state.
+
+### I06: Generate and manage ICP versions [ ]
+
+- [ ] Migrate `icps` linked to a profile.
+- [ ] Add `POST /api/business-profiles/:profileId/icps` using I03-I05.
+- [ ] Add `GET /api/business-profiles/:profileId/icps` and a selection action.
+- [ ] Define the selection route as `PATCH /api/business-profiles/:profileId/selected-icp` with an `icpId`; verify that the ICP belongs to that profile.
+- [ ] Test version order, selected version, and model failure.
+
+**Acceptance:** Downstream matching uses the selected validated version.
+
+**Phase check:**
+
+```powershell
+npm run db:migrate
+npm run check
+npm test
+npm run build
+# Manually: login -> create profile -> generate ICP with configured model -> read/select ICP
+```
+
+## Phase 4: Lead discovery and qualification
+
+**Goal:** Show candidate leads with explainable fit scores and uncertainty.
+
+### L01: Match leads to ICP [ ]
+
+- [ ] Compare only fields actually present in the stored lead and ICP.
+- [ ] Return matched and excluded IDs with reasons.
+- [ ] Test missing industry and region mismatches.
+
+**Acceptance:** A lead with unknown data is not treated as a confirmed match.
+
+### L02: Candidate route [ ]
+
+- [ ] Add `GET /api/icps/:icpId/candidates` with a limit.
+- [ ] Return lead IDs, evidence, and exclusion reasons where useful.
+- [ ] Test unknown ICP and bounded results.
+
+**Acceptance:** Manager can inspect why a lead was suggested.
+
+### L03: Rule score and category [ ]
+
+- [ ] Define score factors and weights separately from prompts.
+- [ ] Convert score to High, Medium, or Low Fit; mark borderline results.
+- [ ] Test each factor, missing data, and exact threshold boundaries.
+
+**Acceptance:** The same inputs always give the same score and factors.
+
+### L04: Optional LangChain explanation [ ]
+
+- [ ] Give the model only known evidence for an uncertain score.
+- [ ] Validate its explanation and reject invented lead facts.
+- [ ] Keep the rule score authoritative.
+
+**Acceptance:** Model failure cannot silently change the numeric score.
+
+### L05: Save qualification and review item [ ]
+
+- [ ] Migrate qualifications and review items.
+- [ ] Add `POST /api/leads/:leadId/qualifications` with ICP ID.
+- [ ] Save score, category, factors, source run, and uncertain status.
+- [ ] Test retry deduplication and review gating.
+
+**Acceptance:** Borderline leads cannot proceed to outreach until reviewed.
+
+### L06: Review uncertain leads [ ]
+
+- [ ] Add authenticated `GET /api/review-items` and `PATCH /api/review-items/:reviewId` for approve/reject with a reason.
+- [ ] Store reviewer, decision time, and qualification reference; reject invalid or conflicting decisions.
+- [ ] Test that rejection blocks outreach and approval permits the next step once.
+
+**Acceptance:** A manager can resolve an uncertain lead through the API with a traceable decision.
+
+**Phase check:**
+
+```powershell
+npm run db:migrate
+npm run check
+npm test
+npm run build
+# Manually: selected ICP -> candidate route -> qualification -> inspect review item
+```
+
+## Phase 5: Knowledge retrieval (RAG)
+
+**Goal:** Give outreach drafting source-backed product information.
+
+### R01: Add authorized knowledge documents [ ]
+
+- [ ] Add small demo product facts or guidelines with source names.
+- [ ] Exclude raw contact lists and private secrets.
+- [ ] Record document version and location.
+
+**Acceptance:** Every fact used for drafting can be traced to a source.
+
+### R02: Split and store chunks [ ]
+
+- [ ] Make deterministic chunk IDs, text, document ID, and location.
+- [ ] Migrate document and chunk tables.
+- [ ] Test that chunk text maps back to its document.
+
+**Acceptance:** Re-ingestion does not create duplicate chunks.
+
+### R03: pgvector and embeddings [ ]
+
+- [ ] Enable pgvector in the chosen PostgreSQL environment.
+- [ ] Add an embeddings table and a LangChain-compatible embedding adapter.
+- [ ] Add `knowledge:ingest` using fake embeddings in tests.
+- [ ] Test dimension errors and retry-safe ingestion.
+
+**Acceptance:** The same document can be ingested twice without duplicates.
+
+### R04: Retrieval tool [ ]
+
+- [ ] Implement `retrieveKnowledge(question, limit)` against vector search.
+- [ ] Return text, source ID, location, and similarity score.
+- [ ] Test relevant, unrelated, and no-match fixtures.
+
+**Acceptance:** A relevant chunk ranks above an unrelated chunk.
+
+### R05: Grounding check [ ]
+
+- [ ] Supply retrieved passages and source IDs to the draft prompt.
+- [ ] Flag claims with no supporting passage.
+- [ ] Test an invented product claim.
+
+**Acceptance:** Unsupported claims are held for review, not treated as facts.
+
+**Phase check (ingest script planned in R03):**
+
+```powershell
+npm run db:migrate
+npm run knowledge:ingest
+npm run check
+npm test
+npm run build
+```
+
+## Phase 6: LangGraph workflow and tools
+
+**Goal:** Coordinate tested services in one resumable sales run.
+
+### G01: Shared graph state [ ]
+
+- [ ] Install LangGraph JS and define typed state for profile, ICP, leads, scores, reviews, drafts, replies, and errors.
+- [ ] Keep IDs and compact facts in state; durable CRM records stay in PostgreSQL.
+- [ ] Test valid initial and updated state.
+
+**Acceptance:** Every node receives only the fields it needs and returns a valid update.
+
+### G02: ICP and lead-finding nodes [ ]
+
+- [ ] Wrap the tested ICP service in an `icp` node.
+- [ ] Wrap candidate search in a `find_leads` node.
+- [ ] Test their state updates with fake services.
+
+**Acceptance:** Fixed input produces an ICP ID and candidate lead IDs.
+
+### G03: Qualification node and branches [ ]
+
+- [ ] Wrap rule scoring in a `qualify` node.
+- [ ] Add conditional edges: high fit -> draft ready; low fit -> finish; uncertain -> review.
+- [ ] Test all three paths.
+
+**Acceptance:** Uncertain leads never bypass review.
+
+### G04: Agent tools [ ]
+
+- [ ] Expose validated `findLeads`, `scoreLead`, `retrieveKnowledge`, and `saveCrmActivity` tools.
+- [ ] Give each tool a small input/output schema.
+- [ ] Test malformed inputs, normal outputs, and repeated CRM writes.
+
+**Acceptance:** The model cannot invoke an unvalidated database action.
+
+### G05: Failure and pause/resume [ ]
+
+- [ ] Bound model/tool timeouts and retries.
+- [ ] Add per-run limits for graph steps, processed leads, and model calls; stop with a visible reason when exceeded.
+- [ ] Persist graph checkpoints before human review.
+- [ ] Resume once after a decision; test a process restart and duplicate retry.
+
+**Acceptance:** A resumed run does not repeat a CRM activity.
+
+### G06: Workflow API [ ]
+
+- [ ] Add `POST /api/workflows` returning a run ID.
+- [ ] Add `GET /api/workflows/:runId` returning stage, status, and safe event history.
+- [ ] Test invalid input, progress, failure, and unknown ID.
+
+**Acceptance:** Manager can see where a run stopped and why.
+
+### G07: Resume route and run execution [ ]
+
+- [ ] Add `POST /api/workflows/:runId/resume` referencing a stored review decision.
+- [ ] Execute runs outside the HTTP response lifecycle and persist run status and errors.
+- [ ] Test invalid decision/run combinations, repeated resume, and restart recovery.
+
+**Acceptance:** Start returns promptly; an approved paused run resumes once after restart.
+
+**Phase check:**
+
+```powershell
+npm run db:migrate
+npm run check
+npm test
+npm run build
+# Manually: start workflow -> inspect run -> review uncertain lead -> inspect resumed run
+```
+
+## Phase 7: Outreach drafts and simulated replies
+
+**Goal:** Review a sourced draft, simulate contact, and enforce opt-outs.
+
+### O01: Generate a draft [ ]
+
+- [ ] Build a LangChain prompt from approved lead facts, ICP, and retrieved knowledge.
+- [ ] Validate subject, body, tone, and source references.
+- [ ] Reject unsupported claims and save as `pending_review`.
+
+**Acceptance:** No draft automatically sends a message.
+
+### O02: Draft API and review [ ]
+
+- [ ] Add `POST /api/leads/:leadId/outreach-drafts`.
+- [ ] Add `GET /api/leads/:leadId/outreach-drafts` and `GET /api/outreach-drafts/:draftId`.
+- [ ] Add `PATCH /api/outreach-drafts/:draftId/review` for approve/reject.
+- [ ] Test authentication, unknown IDs, and repeated decisions.
+
+**Acceptance:** Only an authenticated reviewer can approve a draft.
+
+### O03: Simulate contact [ ]
+
+- [ ] Add authenticated `POST /api/outreach-drafts/:draftId/simulate`.
+- [ ] Record an approved draft as a simulated CRM contact activity.
+- [ ] Block unapproved drafts and suppressed leads.
+- [ ] Test that no email or SMS provider is called.
+
+**Acceptance:** The activity clearly says `simulated`.
+
+### O04: Submit and classify replies [ ]
+
+- [ ] Add `POST /api/leads/:leadId/responses` for a simulated reply.
+- [ ] Classify Interested, Not Interested, Follow-up Required, Unsubscribe, or review needed.
+- [ ] Test clear and ambiguous replies.
+
+**Acceptance:** The reply remains attached to the correct lead and activity.
+
+### O05: Suppress and follow up [ ]
+
+- [ ] Store opt-out records before any later outreach decision.
+- [ ] Block drafting and simulated contact for suppressed leads across runs.
+- [ ] Create a human review item for eligible follow-up; never send automatically.
+
+**Acceptance:** An Unsubscribe reply prevents future outreach actions.
+
+### O06: Connect outreach to LangGraph [ ]
+
+- [ ] Add an OutreachAgent node that calls the draft service when a qualified lead reaches `draft_ready`.
+- [ ] Pause for draft approval and resume to the simulated-contact service.
+- [ ] Test approval, rejection, and suppression branches with fake models.
+
+**Acceptance:** A workflow reaches an approved simulated contact without bypassing review.
+
+### O07: Connect response handling to LangGraph [ ]
+
+- [ ] Add a ResponseAgent node that classifies the submitted simulated reply.
+- [ ] Route interested, uninterested, follow-up, opt-out, and uncertain responses explicitly.
+- [ ] Test each branch and record its outcome in graph state.
+
+**Acceptance:** Submitted replies move the corresponding run to the correct next stage.
+
+### O08: CRM update node [ ]
+
+- [ ] Add a CRMUpdateAgent node using validated, idempotent activity services.
+- [ ] Persist lead stage and an opportunity record for an interested response; store suppression before any further outreach.
+- [ ] Test retries and confirm the timeline/dashboard inputs match persisted outcomes.
+
+**Acceptance:** A complete multi-agent run updates CRM once per action.
+
+**Phase check:**
+
+```powershell
+npm run db:migrate
+npm run check
+npm test
+npm run build
+# Manually: generate -> review -> simulate -> submit Unsubscribe -> verify new draft blocked
+```
+
+## Phase 8: React dashboard and CRM views
+
+**Goal:** A manager can complete and inspect the demo flow in a browser.
+
+### C01: CRM timeline and summary API [ ]
+
+- [ ] Add `GET /api/leads/:leadId/activities` in time order.
+- [ ] Add `GET /api/dashboard/summary` for leads, qualified, contacted, replies, opportunities, and review queue.
+- [ ] Test counts against seeded records and simulated activity labels.
+
+**Acceptance:** API counts match stored CRM events.
+
+### C02: React client setup [ ]
+
+- [ ] Create a `client/` React + TypeScript app with its own `package.json`.
+- [ ] Add routing, API client, shared layout, and development proxy/CORS plan.
+- [ ] Show loading, empty, and error states.
+
+**Acceptance:** Client starts locally and reaches the Express health route.
+
+### C03: Login, session, and logout UI [ ]
+
+- [ ] Build a login form calling `POST /api/auth/login`.
+- [ ] Restore login with `GET /api/auth/me` on refresh.
+- [ ] Add logout calling `POST /api/auth/logout` and clear client state.
+- [ ] Protect browser routes while relying on server authorization for data.
+
+**Acceptance:** Refresh keeps a valid session; logout returns to login.
+
+### C04: Profile and ICP UI [ ]
+
+- [ ] Build a profile form and validation messages.
+- [ ] Show generated ICP versions, unknowns, and selected version.
+- [ ] Let the manager select an ICP.
+
+**Acceptance:** Saved profile and ICP can be revisited after refresh.
+
+### C05: Lead and review UI [ ]
+
+- [ ] Show lead table, filters, fit score, factors, and lead detail.
+- [ ] Show timeline, uncertain lead queue, and draft approve/reject actions.
+- [ ] Refresh the correct item after a review decision.
+
+**Acceptance:** Reviewer can understand why each lead or draft needs attention.
+
+### C06: Dashboard and workflow UI [ ]
+
+- [ ] Show funnel counts, simulated labels, current workflow stage, and errors.
+- [ ] Link each summary item to the matching run, lead, or review item.
+- [ ] Test browser flow with a seeded demo.
+
+**Acceptance:** One demo run is understandable without database access.
+
+**Phase check (client scripts created in C02):**
+
+```powershell
+npm run check
+npm test
+npm run build
+npm install --prefix client
+npm run build --prefix client
+# In separate terminals: npm run dev ; npm run dev --prefix client
+# Manually: login -> profile -> ICP -> leads -> draft review -> dashboard -> logout
+```
+
+## Phase 9: Evaluation, security, and final demo
+
+**Goal:** A repeatable demo and honest report of quality, cost, and limitations.
+
+### E01: Label and measure lead fit [ ]
+
+- [ ] Label a small synthetic or permitted lead sample; separate development and test labels.
+- [ ] Add an `eval:leads` script calculating precision, recall, F1, and accuracy.
+- [ ] Compare rule-only and full flow on the same held-out set.
+
+**Acceptance:** The report includes sample counts behind each metric.
+
+### E02: Evaluate drafts and failures [ ]
+
+- [ ] Score relevance, personalization, source support, tone, and call to action with a human rubric.
+- [ ] Exercise bad model output, missing fields, database failure, retry, ambiguous reply, and unsubscribe.
+- [ ] Record duration, model calls, estimated cost, and failures.
+
+**Acceptance:** Observed results and simulated conversion outcomes are clearly labeled.
+
+### E03: Security and privacy review [ ]
+
+- [ ] Verify protected routes, session expiry, validation, secret handling, and safe logs.
+- [ ] Check raw dataset handling and permitted use before any import.
+- [ ] Fix issues or document a concrete limitation.
+
+**Acceptance:** Sensitive endpoints and personal data have an explicit review result.
+
+### E04: GitHub automated checks [ ]
+
+- [ ] Add a GitHub Actions workflow for lockfile-based installation, type checking, tests, and build.
+- [ ] Run database integration checks against an isolated pgvector database service.
+- [ ] Add the client build once the React app exists; keep model credentials out of test jobs.
+
+**Acceptance:** A pushed commit shows passing automated checks without paid model access.
+
+### P01: Repeatable demo seed [ ]
+
+- [ ] Add `demo:seed` for one business, knowledge documents, and safe leads.
+- [ ] Make reset/reseed deterministic without importing unlicensed contacts.
+- [ ] Record the demo account setup steps without storing the password.
+
+**Acceptance:** Two fresh setups produce the same starting state.
+
+### P02: End-to-end rehearsal [ ]
+
+- [ ] Login, enter profile, generate/select ICP, find and score leads.
+- [ ] Review uncertain lead and outreach draft, simulate reply, inspect CRM/dashboard.
+- [ ] Record exact steps and observed output in the final report.
+
+**Acceptance:** A course evaluator can repeat the flow with the README.
+
+### P03: Final report and deployment decision [ ]
+
+- [ ] Write evaluation method, measured results, baseline, cost, and limits.
+- [ ] Decide whether the course needs hosting or a local demo.
+- [ ] Verify and document the chosen setup.
+
+**Acceptance:** Every reported number has a source or is marked simulated.
+
+**Phase check (scripts created in E01 and P01):**
+
+```powershell
+npm run check
+npm test
+npm run build
+npm run build --prefix client
+npm run eval:leads
+npm run demo:seed
+# Manually repeat the full flow in P02 and compare results with the report
+```
+
+## Definition of done for every task
+
+- [ ] Its listed checkboxes and acceptance check are satisfied.
+- [ ] Relevant tests and type/build checks pass; record exact commands in `progress.md`.
+- [ ] Documentation and task status match the code that exists.
+- [ ] Commit only that task's files using its ID in the message.
+- [ ] Stop and ask the user to review before the next task.

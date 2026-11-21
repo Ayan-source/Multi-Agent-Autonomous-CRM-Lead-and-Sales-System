@@ -6,6 +6,8 @@ SalesGenie AI is a university project that demonstrates a working B2B sales work
 
 The primary user is a sales manager who enters a business profile, reviews proposed leads and messages, and follows their status. The student developer and course evaluator need a repeatable demo that shows each decision, the data behind it, and what happens when data is incomplete or a step fails.
 
+Deliver frontend screens incrementally with the corresponding backend features so the user can test each flow in the browser before development continues. Use a minimal, polished CRM interface with clear typography, restrained color, and accessible forms, tables, and navigation. Each UI task must state the browser steps and expected result for user review.
+
 ## Product scope
 
 ### Required capabilities

@@ -8,6 +8,13 @@
 
 **Status:** `[x]` completed; `[ ]` still to do. Start with **F04**, after review of completed **F03**. The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
 
+
+**Frontend rule:** Build each screen alongside its backend feature. Each UI task below is a separate commit/review checkpoint. Follow the explicit order in each phase, and stop at **Your browser test** for the user's review. Backend-only tasks use automated/API checks; their dependent UI task is the browser checkpoint.
+
+**Visual direction:** A compact CRM workspace with warm neutral backgrounds, dark readable text, one deep teal accent, clear typography, subtle borders, and generous spacing. Use practical tables, focused forms, and a simple sidebar. Keep login uncluttered. Avoid decorative gradients, glass effects, oversized cards, and invented analytics. Forms need labels, keyboard focus, responsive layouts, and useful loading/error/empty states. Establish these choices in C02 and reuse them throughout.
+
+**Browser commands (planned in C02):** Run `npm run dev` in the root and `npm run dev --prefix client` in another terminal. Open the client URL printed by its terminal. Use `npm run build --prefix client` to check each frontend task before review. Database-backed screens also need `docker compose up -d db`. Each phase below includes the shared commands and its manual test sequence.
+
 ## How to use this file
 
 Each **ID is one review and commit checkpoint**. Complete its small checkboxes, run its acceptance check, update `progress.md`, commit that ID, and ask for review before starting the next ID. Do not mark a task complete merely because the code exists. Phase commands at the end of each phase are a final check after its IDs are complete. Commands marked **planned** need their npm scripts created in the named task; they cannot run yet.
@@ -107,21 +114,33 @@ git check-ignore globalb2bdataset.csv
 
 **Acceptance:** Invalid requests return clear 4xx responses; unexpected errors return a safe 500 response.
 
-**Phase check (available now except F04's new test):**
+### C02: React client and visual foundation [ ]
+
+- [ ] Create a `client/` React + TypeScript app with its own npm scripts.
+- [ ] Add routing, a shared API client, and a development proxy forwarding `/api` and `/health` to Express with session cookies.
+- [ ] Define the typography, color, spacing, button, input, and layout styles from the visual direction.
+- [ ] Show a simple API connection status using the real health route.
+
+**Acceptance:** Client builds and connects to Express through the development proxy.
+
+**Your browser test:** Open the client, confirm the API status, resize to a phone width, and tab through the controls. Stop Express and confirm a useful connection error appears. Review the visual style before more screens are added.
+
+**Phase check (client commands become available in C02):**
 
 ```powershell
 npm run check
 npm test
 npm run build
-npm start
-# In another terminal: Invoke-RestMethod http://127.0.0.1:3000/health
+npm run build --prefix client
+# In separate terminals: npm run dev ; npm run dev --prefix client
+# Browser: check API status, disconnected state, keyboard focus, and mobile layout
 ```
 
 ## Phase 2: PostgreSQL, leads, and authentication
 
 **Goal:** A manager can sign in and work with stored demo leads.
 
-**Order:** DB01 -> D03 -> D04 -> D05 -> DB02 -> AU01-AU06 -> D06-D10. Authentication is ready before lead routes are exposed; AU06 installs the guard that each lead route must use.
+**Order:** DB01 -> D03-D05 -> DB02 -> AU01-AU03 -> UI01 -> AU04 -> UI02 -> AU05 -> UI03 -> AU06 -> D06 -> UI04 -> D07 -> UI05 -> D08 -> UI06 -> D09 -> UI07 -> D10. Use this order rather than task numbering. Each UI task immediately exercises the preceding route; AU06 protects all lead routes before they are added.
 
 ### DB01: Docker database [ ]
 
@@ -164,46 +183,6 @@ npm start
 
 **Acceptance:** Database tests are repeatable and cannot reset the development database.
 
-### D06: List leads [ ]
-
-- [ ] Add `GET /api/leads` with a small bounded `limit` and pagination cursor/offset.
-- [ ] Return stable IDs and only intended public fields.
-- [ ] Test empty, populated, and excessive-limit requests.
-
-**Acceptance:** Results are paginated and the maximum page size is enforced.
-
-### D07: Read one lead [ ]
-
-- [ ] Add `GET /api/leads/:leadId`.
-- [ ] Return 404 for an unknown ID.
-- [ ] Test a known and unknown ID.
-
-**Acceptance:** The route returns exactly one lead or 404.
-
-### D08: Create one lead [ ]
-
-- [ ] Add `POST /api/leads` for manual demo entry.
-- [ ] Validate the body and handle duplicate email/source key.
-- [ ] Test valid, invalid, and duplicate requests.
-
-**Acceptance:** Valid input persists; invalid input returns 400.
-
-### D09: Edit one lead [ ]
-
-- [ ] Add `PATCH /api/leads/:leadId` for approved editable fields.
-- [ ] Validate changes and update `updated_at`.
-- [ ] Test saved changes, invalid input, and an unknown ID.
-
-**Acceptance:** Allowed edits persist and other fields cannot be changed.
-
-### D10: Record a CRM activity [ ]
-
-- [ ] Migrate an `activities` table with lead ID, type, details, time, and idempotency key.
-- [ ] Add one write function for later agents and routes.
-- [ ] Test repeating the same action.
-
-**Acceptance:** A retry creates one activity row.
-
 ### AU01: User and session tables [ ]
 
 - [ ] Migrate `users` and `sessions` tables.
@@ -229,6 +208,15 @@ npm start
 
 **Acceptance:** Correct credentials produce a usable session; other requests do not.
 
+### UI01: Login screen [ ]
+
+- [ ] Build `/login` with labeled email/password fields and a single sign-in action.
+- [ ] Connect to the login route; show validation, submitting, and invalid-credential states.
+- [ ] Show a minimal signed-in landing screen after success.
+
+**Acceptance / Your browser test:** Try empty fields, wrong password, and correct credentials. Errors must be readable; success opens the signed-in screen. Refresh/session behavior follows in UI02.
+
+
 ### AU04: Current session [ ]
 
 - [ ] Add `GET /api/auth/me`.
@@ -236,6 +224,14 @@ npm start
 - [ ] Test valid, missing, expired, and deleted sessions.
 
 **Acceptance:** Invalid sessions return 401.
+
+### UI02: Restore and protect browser sessions [ ]
+
+- [ ] Call `/api/auth/me` on app load and show a short session-loading state.
+- [ ] Add the protected workspace layout and redirect expired sessions to login.
+
+**Acceptance / Your browser test:** Log in and refresh: stay signed in. Open a protected URL in a private window: return to login without showing CRM data.
+
 
 ### AU05: Logout [ ]
 
@@ -245,6 +241,14 @@ npm start
 
 **Acceptance:** Logout immediately revokes access.
 
+### UI03: Logout control [ ]
+
+- [ ] Add logout to the workspace navigation.
+- [ ] Call the logout route, clear user/cached CRM state, and return to login.
+
+**Acceptance / Your browser test:** Log out, refresh, and use browser Back. Protected data must remain inaccessible; signing in again must work.
+
+
 ### AU06: Protect CRM routes [ ]
 
 - [ ] Add an Express session middleware for `/api/leads` and future CRM routes.
@@ -253,6 +257,78 @@ npm start
 - [ ] Test anonymous and authenticated calls.
 
 **Acceptance:** Anonymous CRM requests return 401.
+
+### D06: List leads [ ]
+
+- [ ] Add `GET /api/leads` with a small bounded `limit` and pagination cursor/offset.
+- [ ] Return stable IDs and only intended public fields.
+- [ ] Test empty, populated, and excessive-limit requests.
+
+**Acceptance:** Results are paginated and the maximum page size is enforced.
+
+### UI04: Lead list [ ]
+
+- [ ] Build `/leads` with a compact table using the list route and pagination.
+- [ ] Show loading, empty, and failed-request states without fake records.
+
+**Acceptance / Your browser test:** Sign in and open Leads. Confirm seeded records and page limits; verify an empty database shows an empty state.
+
+
+### D07: Read one lead [ ]
+
+- [ ] Add `GET /api/leads/:leadId`.
+- [ ] Return 404 for an unknown ID.
+- [ ] Test a known and unknown ID.
+
+**Acceptance:** The route returns exactly one lead or 404.
+
+### UI05: Lead details [ ]
+
+- [ ] Link each lead row to `/leads/:leadId`.
+- [ ] Show known fields and mark missing industry as unknown; handle 404.
+
+**Acceptance / Your browser test:** Open a lead and compare it with the list. Open an unknown ID and confirm a useful missing-lead message.
+
+
+### D08: Create one lead [ ]
+
+- [ ] Add `POST /api/leads` for manual demo entry.
+- [ ] Validate the body and handle duplicate email/source key.
+- [ ] Test valid, invalid, and duplicate requests.
+
+**Acceptance:** Valid input persists; invalid input returns 400.
+
+### UI06: Create lead form [ ]
+
+- [ ] Add a New lead form using the create route.
+- [ ] Show field errors and duplicate handling; return to the saved record on success.
+
+**Acceptance / Your browser test:** Create a synthetic lead, try an invalid email, then repeat the same email. Confirm only one valid record is stored.
+
+
+### D09: Edit one lead [ ]
+
+- [ ] Add `PATCH /api/leads/:leadId` for approved editable fields.
+- [ ] Validate changes and update `updated_at`.
+- [ ] Test saved changes, invalid input, and an unknown ID.
+
+**Acceptance:** Allowed edits persist and other fields cannot be changed.
+
+### UI07: Edit lead form [ ]
+
+- [ ] Add edit controls for allowed fields using the patch route.
+- [ ] Preserve unsaved input when validation fails and refresh the saved record.
+
+**Acceptance / Your browser test:** Edit a job title and refresh: it persists. Submit invalid input: show the error without losing the form.
+
+
+### D10: Record a CRM activity [ ]
+
+- [ ] Migrate an `activities` table with lead ID, type, details, time, and idempotency key.
+- [ ] Add one write function for later agents and routes.
+- [ ] Test repeating the same action.
+
+**Acceptance:** A retry creates one activity row.
 
 **Phase check (scripts added by D03-D05 and AU02):**
 
@@ -267,6 +343,7 @@ npm run test:db        # planned in DB02
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 # Manually: login -> /api/auth/me -> list a lead -> logout -> /api/auth/me returns 401
 # When finished: docker compose stop db (keeps the data volume)
 ```
@@ -290,6 +367,14 @@ npm run build
 - [ ] Test owner access, validation, and unknown ID.
 
 **Acceptance:** A signed-in manager can revisit a saved profile.
+
+### UI08: Business profile form [ ]
+
+- [ ] Build profile creation and saved profile views using the profile routes.
+- [ ] Show field validation and save/error states.
+
+**Acceptance / Your browser test:** Submit an empty profile, then save a valid synthetic business. Refresh and confirm the saved description and targets.
+
 
 ### I03: LangChain model adapter [ ]
 
@@ -327,6 +412,14 @@ npm run build
 
 **Acceptance:** Downstream matching uses the selected validated version.
 
+### UI09: ICP generation and selection [ ]
+
+- [ ] Add Generate ICP, generation status, version history, and selection controls.
+- [ ] Display rationale, unknowns, and model failures clearly.
+
+**Acceptance / Your browser test:** Generate an ICP from the saved profile, inspect its evidence/unknowns, select a version, and refresh to confirm selection. Check a configured model failure shows an error.
+
+
 **Phase check:**
 
 ```powershell
@@ -334,6 +427,7 @@ npm run db:migrate
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 # Manually: login -> create profile -> generate ICP with configured model -> read/select ICP
 ```
 
@@ -356,6 +450,14 @@ npm run build
 - [ ] Test unknown ICP and bounded results.
 
 **Acceptance:** Manager can inspect why a lead was suggested.
+
+### UI10: Candidate results [ ]
+
+- [ ] Show candidates for the selected ICP with match evidence and bounded pagination.
+- [ ] Link each candidate to the existing lead detail screen.
+
+**Acceptance / Your browser test:** Select an ICP, find candidates, and inspect matching reasons. Verify changing the ICP refreshes results.
+
 
 ### L03: Rule score and category [ ]
 
@@ -382,6 +484,14 @@ npm run build
 
 **Acceptance:** Borderline leads cannot proceed to outreach until reviewed.
 
+### UI11: Qualification results [ ]
+
+- [ ] Add a qualification action and display score, category, factor contributions, and uncertainty.
+- [ ] Keep a visible pending-review label for uncertain leads.
+
+**Acceptance / Your browser test:** Qualify synthetic high, low, and uncertain examples. Inspect the factors and confirm uncertain leads remain blocked.
+
+
 ### L06: Review uncertain leads [ ]
 
 - [ ] Add authenticated `GET /api/review-items` and `PATCH /api/review-items/:reviewId` for approve/reject with a reason.
@@ -390,6 +500,14 @@ npm run build
 
 **Acceptance:** A manager can resolve an uncertain lead through the API with a traceable decision.
 
+### UI12: Lead review queue [ ]
+
+- [ ] Build `/reviews` using review-item list and decision routes.
+- [ ] Show evidence, approve/reject controls, reason input, and saved decision state.
+
+**Acceptance / Your browser test:** Approve one uncertain lead and reject another. Refresh and confirm decisions persist and duplicate clicks do not repeat actions.
+
+
 **Phase check:**
 
 ```powershell
@@ -397,6 +515,7 @@ npm run db:migrate
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 # Manually: selected ICP -> candidate route -> qualification -> inspect review item
 ```
 
@@ -445,6 +564,14 @@ npm run build
 
 **Acceptance:** Unsupported claims are held for review, not treated as facts.
 
+### UI13: Knowledge search preview [ ]
+
+- [ ] Add authenticated `POST /api/knowledge/search` wrapping the tested retrieval service.
+- [ ] Build a small `/knowledge` search screen showing returned passages and source locations.
+
+**Acceptance / Your browser test:** Ask a question covered by the seeded documents and inspect its source passage. Ask an unrelated question and confirm a clear no-match state.
+
+
 **Phase check (ingest script planned in R03):**
 
 ```powershell
@@ -453,6 +580,7 @@ npm run knowledge:ingest
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 ```
 
 ## Phase 6: LangGraph workflow and tools
@@ -516,6 +644,15 @@ npm run build
 
 **Acceptance:** Start returns promptly; an approved paused run resumes once after restart.
 
+### UI14: Workflow launch and progress [ ]
+
+- [ ] Build `/workflows` with profile/ICP selection and a start action.
+- [ ] Show run stage, node events, errors, and paused/review status; add resume using a stored decision.
+- [ ] Poll safely while running and stop polling on completion or page exit.
+
+**Acceptance / Your browser test:** Start a run, watch its stages, open an uncertain-lead review, and resume after deciding. Refresh the run and verify stored progress remains visible.
+
+
 **Phase check:**
 
 ```powershell
@@ -523,6 +660,7 @@ npm run db:migrate
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 # Manually: start workflow -> inspect run -> review uncertain lead -> inspect resumed run
 ```
 
@@ -547,6 +685,14 @@ npm run build
 
 **Acceptance:** Only an authenticated reviewer can approve a draft.
 
+### UI15: Draft reading and approval [ ]
+
+- [ ] Show generated draft subject/body, supporting sources, and pending-review state on lead detail.
+- [ ] Add generate, approve, and reject actions using the draft routes.
+
+**Acceptance / Your browser test:** Generate and inspect a draft, follow its source references, reject it, and approve another. Refresh to verify the saved decisions.
+
+
 ### O03: Simulate contact [ ]
 
 - [ ] Add authenticated `POST /api/outreach-drafts/:draftId/simulate`.
@@ -555,6 +701,14 @@ npm run build
 - [ ] Test that no email or SMS provider is called.
 
 **Acceptance:** The activity clearly says `simulated`.
+
+### UI16: Simulated contact action [ ]
+
+- [ ] Add a clearly labeled Simulate contact button for approved drafts.
+- [ ] Show the stored simulated result and disable ineligible actions.
+
+**Acceptance / Your browser test:** Try an unapproved draft, then an approved draft. Only the approved action succeeds and is visibly labeled simulated.
+
 
 ### O04: Submit and classify replies [ ]
 
@@ -571,6 +725,14 @@ npm run build
 - [ ] Create a human review item for eligible follow-up; never send automatically.
 
 **Acceptance:** An Unsubscribe reply prevents future outreach actions.
+
+### UI17: Simulated reply and suppression [ ]
+
+- [ ] Add a simulated reply form and display its classification.
+- [ ] Show follow-up/review items and an opt-out label with blocked outreach controls.
+
+**Acceptance / Your browser test:** Submit Interested, an ambiguous reply, and Unsubscribe on separate demo leads. Confirm the right status and that an opted-out lead cannot create or simulate further outreach.
+
 
 ### O06: Connect outreach to LangGraph [ ]
 
@@ -603,12 +765,19 @@ npm run db:migrate
 npm run check
 npm test
 npm run build
+npm run build --prefix client
 # Manually: generate -> review -> simulate -> submit Unsubscribe -> verify new draft blocked
 ```
 
-## Phase 8: React dashboard and CRM views
+## Phase 8: Dashboard and final visual polish
 
-**Goal:** A manager can complete and inspect the demo flow in a browser.
+**Goal:** Bring together the screens built in earlier phases and verify the complete browser experience.
+
+
+
+
+
+
 
 ### C01: CRM timeline and summary API [ ]
 
@@ -617,49 +786,28 @@ npm run build
 - [ ] Test counts against seeded records and simulated activity labels.
 
 **Acceptance:** API counts match stored CRM events.
+### UI18: Lead activity timeline [ ]
 
-### C02: React client setup [ ]
+- [ ] Show the ordered CRM activity feed on the existing lead detail screen.
+- [ ] Display qualifications, review decisions, simulated contacts, and replies with timestamps.
 
-- [ ] Create a `client/` React + TypeScript app with its own `package.json`.
-- [ ] Add routing, API client, shared layout, and development proxy/CORS plan.
-- [ ] Show loading, empty, and error states.
+**Acceptance / Your browser test:** Open a lead used in earlier phases and verify that each stored action appears once in order.
 
-**Acceptance:** Client starts locally and reaches the Express health route.
+### C06: Dashboard summary [ ]
 
-### C03: Login, session, and logout UI [ ]
+- [ ] Build `/dashboard` with real funnel totals and links to leads, workflows, and review items.
+- [ ] Show simulation labels and refresh summary values after completed actions.
 
-- [ ] Build a login form calling `POST /api/auth/login`.
-- [ ] Restore login with `GET /api/auth/me` on refresh.
-- [ ] Add logout calling `POST /api/auth/logout` and clear client state.
-- [ ] Protect browser routes while relying on server authorization for data.
+**Acceptance / Your browser test:** Complete a demo action and compare the refreshed counts with the relevant leads and activity records.
 
-**Acceptance:** Refresh keeps a valid session; logout returns to login.
+### C07: Visual and browser polish [ ]
 
-### C04: Profile and ICP UI [ ]
+- [ ] Review the existing screens together for consistent typography, spacing, controls, and navigation.
+- [ ] Check keyboard navigation, mobile layouts, validation, empty states, and error recovery.
 
-- [ ] Build a profile form and validation messages.
-- [ ] Show generated ICP versions, unknowns, and selected version.
-- [ ] Let the manager select an ICP.
+**Acceptance / Your browser test:** Walk through login to simulated reply on desktop and phone widths. Report any unreadable, confusing, or inaccessible control before the final rehearsal.
 
-**Acceptance:** Saved profile and ICP can be revisited after refresh.
-
-### C05: Lead and review UI [ ]
-
-- [ ] Show lead table, filters, fit score, factors, and lead detail.
-- [ ] Show timeline, uncertain lead queue, and draft approve/reject actions.
-- [ ] Refresh the correct item after a review decision.
-
-**Acceptance:** Reviewer can understand why each lead or draft needs attention.
-
-### C06: Dashboard and workflow UI [ ]
-
-- [ ] Show funnel counts, simulated labels, current workflow stage, and errors.
-- [ ] Link each summary item to the matching run, lead, or review item.
-- [ ] Test browser flow with a seeded demo.
-
-**Acceptance:** One demo run is understandable without database access.
-
-**Phase check (client scripts created in C02):**
+**Phase check (client scripts already available from phase 1):**
 
 ```powershell
 npm run check
@@ -746,7 +894,8 @@ npm run demo:seed
 ## Definition of done for every task
 
 - [ ] Its listed checkboxes and acceptance check are satisfied.
-- [ ] Relevant tests and type/build checks pass; record exact commands in `progress.md`.
+- [ ] For a UI task, give the user the start commands and complete its **Your browser test** review before moving on.
+- [ ] Relevant tests and type/build checks pass; keep the result in `progress.md` to one short line.
 - [ ] Documentation and task status match the code that exists.
 - [ ] Commit only that task's files using its ID in the message.
 - [ ] Stop and ask the user to review before the next task.

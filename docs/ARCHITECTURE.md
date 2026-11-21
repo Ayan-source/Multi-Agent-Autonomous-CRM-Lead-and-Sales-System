@@ -12,6 +12,8 @@ Use Docker Compose for PostgreSQL with pgvector, with a versioned image, named p
 
 Use a separate database for integration tests. Run migrations before seeding; record applied migrations and avoid resetting development data during tests.
 
+Build the React shell in phase 1 and add each feature screen alongside its backend routes. Login, session restoration, logout, and lead CRUD become browser-testable in phase 2; subsequent phases add their own screens. Use a shared API client and a development proxy so session cookies work through the client origin. Each UI task includes a user browser checkpoint; phase 8 completes the dashboard and visual polish. The visual style uses warm neutral surfaces, dark text, a deep teal accent, focused forms, practical tables, and consistent spacing. Support keyboard navigation and narrow screens from the initial shell.
+
 ```text
 React dashboard (planned)
        |

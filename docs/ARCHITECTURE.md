@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-`src/app.ts` defines an Express app with `GET /health`; `src/server.ts` loads `.env` when present, validates the port, and starts the server on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. `test/health.test.ts` tests the route over local HTTP, `test/lead-mapping.test.ts` checks the mapper, and `test/config.test.ts` checks port settings. The repository has npm scripts, a dependency lockfile, and TypeScript configuration. There is no database connection, frontend, model call, agent framework, authentication, or production deployment.
+`src/app.ts` defines an Express app with `GET /health`, a 100 KB JSON body limit, and consistent JSON errors for malformed input, unknown paths, oversized bodies, and unexpected errors. `src/server.ts` loads `.env` when present, validates the port, and starts the server on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. HTTP tests check routes and error handling; `test/lead-mapping.test.ts` checks the mapper, and `test/config.test.ts` checks port settings. The repository has npm scripts, a dependency lockfile, and TypeScript configuration. There is no database connection, frontend, model call, agent framework, authentication, or production deployment.
 
 ## Intended system
 

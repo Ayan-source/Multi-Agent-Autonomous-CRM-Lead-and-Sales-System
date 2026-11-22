@@ -6,7 +6,7 @@
 
 **Docker decision:** Run PostgreSQL with pgvector in Docker Compose. Run Express and React locally with npm. Docker configuration is planned in DB01; no container has been configured yet.
 
-**Status:** `[x]` completed; `[ ]` still to do. **F04 is complete; review it before starting F05.** The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
+**Status:** `[x]` completed; `[ ]` still to do. **F05 is complete; review it before starting C02.** The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
 
 
 **Frontend rule:** Build each screen alongside its backend feature. Each UI task below is a separate commit/review checkpoint. Follow the explicit order in each phase, and stop at **Your browser test** for the user's review. Backend-only tasks use automated/API checks; their dependent UI task is the browser checkpoint.
@@ -106,13 +106,13 @@ git check-ignore globalb2bdataset.csv
 
 **Acceptance:** Valid settings start the API; invalid settings give a clear error. Checks pass for default port 3000, a custom valid port, and invalid values.
 
-### F05: Request parsing and API errors [ ]
+### F05: Request parsing and API errors [x]
 
-- [ ] Add bounded JSON body parsing and a consistent validation/error response shape.
-- [ ] Handle unknown routes and unexpected errors without returning stack traces.
-- [ ] Test malformed JSON, an oversized body, and an unknown route.
+- [x] Add JSON parsing with a 100 KB limit and consistent `{ error: { code, message } }` responses.
+- [x] Return clear 404 for unknown routes and safe 500 responses without internal error details.
+- [x] Test malformed JSON, an oversized body, an unknown route, and an unexpected error.
 
-**Acceptance:** Invalid requests return clear 4xx responses; unexpected errors return a safe 500 response.
+**Acceptance:** Malformed JSON returns 400, oversized bodies return 413, unknown paths return 404, and unexpected errors return a generic 500. All four HTTP checks pass.
 
 ### C02: React client and visual foundation [ ]
 

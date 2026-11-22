@@ -6,7 +6,7 @@
 
 **Docker decision:** Run PostgreSQL with pgvector in Docker Compose. Run Express and React locally with npm. Docker configuration is planned in DB01; no container has been configured yet.
 
-**Status:** `[x]` completed; `[ ]` still to do. Start with **F04**, after review of completed **F03**. The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
+**Status:** `[x]` completed; `[ ]` still to do. **F04 is complete; review it before starting F05.** The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
 
 
 **Frontend rule:** Build each screen alongside its backend feature. Each UI task below is a separate commit/review checkpoint. Follow the explicit order in each phase, and stop at **Your browser test** for the user's review. Backend-only tasks use automated/API checks; their dependent UI task is the browser checkpoint.
@@ -98,13 +98,13 @@ git check-ignore globalb2bdataset.csv
 
 **Acceptance:** `npm run check`, `npm run build`, and `npm test` pass (4 tests).
 
-### F04: Configuration validation [ ]
+### F04: Configuration validation [x]
 
-- [ ] Add `.env.example` with placeholder names for the first service used.
-- [ ] Parse `PORT` safely and report an invalid value at startup.
-- [ ] Keep actual credentials outside Git; add a focused valid/invalid config check.
+- [x] Add `.env.example` with a placeholder `PORT`; load local `.env` settings when present.
+- [x] Validate `PORT` as a whole number from 1 through 65535; report invalid values clearly at startup.
+- [x] Keep actual settings outside Git; test default, valid, and invalid port values.
 
-**Acceptance:** Valid settings start the API; invalid settings give a clear error.
+**Acceptance:** Valid settings start the API; invalid settings give a clear error. Checks pass for default port 3000, a custom valid port, and invalid values.
 
 ### F05: Request parsing and API errors [ ]
 

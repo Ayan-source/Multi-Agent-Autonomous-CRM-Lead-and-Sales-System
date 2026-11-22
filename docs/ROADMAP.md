@@ -9,7 +9,7 @@ Commit after every mini task. After a successful commit and user review, remind 
 | Phase | Outcome | Status | Key dependency |
 | --- | --- | --- | --- |
 | 0. Audit | Inspect proposals and supplied dataset; define lead input mapping. | Complete | Dataset license still unconfirmed |
-| 1. Foundation | Runnable API, React shell, basic visual styles, and development checks. | In progress | F04, F05, C02 |
+| 1. Foundation | Runnable API, React shell, basic visual styles, and development checks. | In progress | F05, C02 |
 | 2. Data, access, and CRM API | Docker PostgreSQL, isolated tests, login/logout screens, and protected lead CRUD screens. | Planned | Docker Desktop/Compose, package access |
 | 3. Business profile and ICP | Accept profile and generate validated ICP. | Planned | CRM foundation and LLM access |
 | 4. Discovery and qualification | Find and explain suitable leads; flag uncertainty. | Planned | Verified dataset fields and ICP |
@@ -19,4 +19,4 @@ Commit after every mini task. After a successful commit and user review, remind 
 | 8. Dashboard and polish | Add activity timeline, summary dashboard, and polish the screens built earlier. | Planned | Existing feature screens, CRM records, and workflow events |
 | 9. Evaluation and final demo | Measure quality, reliability, cost, and baseline results; rehearse a reproducible demo and decide deployment. | Planned | Working end-to-end flow |
 
-**Current milestone:** F01 (minimal API), F02 (core project documents), F03 (Express and TypeScript verification), D01 (CSV schema/quality audit), and D02 (validated lead input mapping) are complete. The Express backend builds and its four tests pass. Review F03 before starting another task; F04 (configuration validation) is the next foundation task, followed by D03 (local PostgreSQL connection). The Kaggle dataset's license is still unconfirmed, so the supplied raw contact records must not be imported or used in the demo. No authentication, database, model, agent, frontend, or outreach implementation is complete.
+**Current milestone:** F01-F04 (API foundation, project documents, Express/TypeScript, and environment configuration), D01 (CSV schema/quality audit), and D02 (validated lead input mapping) are complete. The Express backend builds and its four earlier tests passed; F04 adds configuration checks. Review F04 before starting F05 (request parsing and API errors). The Kaggle dataset's license is still unconfirmed, so the supplied raw contact records must not be imported or used in the demo. No database, authentication, model, agent, frontend, or outreach implementation is complete.

@@ -11,10 +11,11 @@ This is the beginning of a university project for a multi-agent B2B sales workfl
 
 ```powershell
 npm install
+Copy-Item .env.example .env  # first run only; edit .env if needed
 npm run dev
 ```
 
-`npm install` creates `node_modules` and installs Express, TypeScript, and the development tools listed in `package.json`. `npm run dev` starts the Express server and restarts it when source files change. Open <http://127.0.0.1:3000/health>; the expected response is `{"status":"ok"}`. Set `PORT` to use another local port.
+`npm install` creates `node_modules` and installs Express, TypeScript, and the development tools listed in `package.json`. The server loads local values from `.env` and defaults to port 3000. `npm run dev` starts Express and restarts it when source files change. Open <http://127.0.0.1:3000/health>; the expected response is `{"status":"ok"}`. Edit `PORT` in `.env` to use another port. `.env` is ignored by Git; commit only `.env.example` with placeholder values.
 
 `src/server.ts` starts the server. `src/app.ts` defines the Express app and its routes. `src/lead-mapping.ts` is an ordinary helper that validates a lead row; it is not an AI agent.
 

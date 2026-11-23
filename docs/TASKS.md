@@ -2,18 +2,18 @@
 
 **Project:** A sales manager enters a business profile, reviews an AI-generated ideal customer profile (ICP), finds and qualifies leads, reviews outreach drafts, simulates replies, and sees the CRM record and dashboard update.
 
-**Stack:** Node.js + Express + TypeScript API, PostgreSQL, React frontend (PERN). LangChain JS will handle model prompts, structured output, and retrieval tools. LangGraph JS will coordinate the multi-step workflow. Neither AI library is installed yet.
+**Stack:** Node.js + Express + TypeScript API, PostgreSQL, React + Tailwind frontend (PERN). LangChain JS will handle model prompts, structured output, and retrieval tools. LangGraph JS will coordinate the multi-step workflow. Neither AI library is installed yet.
 
 **Docker decision:** Run PostgreSQL with pgvector in Docker Compose. Run Express and React locally with npm. Docker configuration is planned in DB01; no container has been configured yet.
 
-**Status:** `[x]` completed; `[ ]` still to do. **F05 is complete; review it before starting C02.** The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
+**Status:** `[x]` completed; `[ ]` still to do. **C02 starts and builds locally. Review it in a browser before DB01.** The raw LeadsBlue CSV is ignored by Git and its license is unconfirmed. Use synthetic lead records until its permitted use is known.
 
 
 **Frontend rule:** Build each screen alongside its backend feature. Each UI task below is a separate commit/review checkpoint. Follow the explicit order in each phase, and stop at **Your browser test** for the user's review. Backend-only tasks use automated/API checks; their dependent UI task is the browser checkpoint.
 
-**Visual direction:** A compact CRM workspace with warm neutral backgrounds, dark readable text, one deep teal accent, clear typography, subtle borders, and generous spacing. Use practical tables, focused forms, and a simple sidebar. Keep login uncluttered. Avoid decorative gradients, glass effects, oversized cards, and invented analytics. Forms need labels, keyboard focus, responsive layouts, and useful loading/error/empty states. Establish these choices in C02 and reuse them throughout.
+**Visual direction:** A compact CRM workspace with warm neutral backgrounds, dark readable text, one deep teal accent, clear typography, subtle borders, and generous spacing. Use practical tables, focused forms, and a simple sidebar. Keep login uncluttered. Avoid decorative gradients, glass effects, oversized cards, and invented analytics. Forms need labels, keyboard focus, responsive layouts, and useful loading/error/empty states. Use Tailwind utilities for layout and visual styles, with only small base CSS rules. Establish these choices in C02 and reuse them throughout.
 
-**Browser commands (planned in C02):** Run `npm run dev` in the root and `npm run dev --prefix client` in another terminal. Open the client URL printed by its terminal. Use `npm run build --prefix client` to check each frontend task before review. Database-backed screens also need `docker compose up -d db`. Each phase below includes the shared commands and its manual test sequence.
+**Browser commands:** Run `npm run dev --prefix backend` in one terminal and `npm run dev --prefix frontend` in another terminal. Open <http://127.0.0.1:5173>. Use `npm run build --prefix frontend` to check each frontend task before review. Database-backed screens also need `docker compose up -d db`. Each phase below includes the shared commands and its manual test sequence.
 
 ## How to use this file
 
@@ -24,15 +24,22 @@ Each **ID is one review and commit checkpoint**. Complete its small checkboxes, 
 Current commands (from the repository root):
 
 ```powershell
+Push-Location .\backend
 npm install
-npm run dev       # Start Express on http://127.0.0.1:3000
-npm test          # Build, then run tests
-npm run check     # TypeScript type check
-npm run build     # Compile to dist/
-npm start         # Start compiled API after build
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+Pop-Location
+Push-Location .\frontend
+npm install
+Pop-Location
+npm run dev --prefix backend       # Express API
+npm run dev --prefix frontend      # React app, in a second terminal
+npm test --prefix backend          # Build, then run API tests
+npm run check --prefix backend     # Backend TypeScript check
+npm run build --prefix backend    # Compile API to backend/dist/
+npm run build --prefix frontend   # Build React app
 ```
 
-The `npm run dev` script uses `tsx watch`; this workspace's Node runtime currently cannot provide `os.userInfo()`, so this particular script needs checking in the user's own terminal. The build and compiled HTTP test pass here.
+The backend development script uses Node's watch mode and runs the TypeScript source directly.
 
 ## Phase 0: Project and dataset audit
 
@@ -66,7 +73,7 @@ The `npm run dev` script uses `tsx watch`; this workspace's Node runtime current
 **Phase check (available now):**
 
 ```powershell
-npm test
+npm test --prefix backend
 git check-ignore globalb2bdataset.csv
 ```
 
@@ -76,7 +83,7 @@ git check-ignore globalb2bdataset.csv
 
 ### F01: Minimal API [x]
 
-- [x] Create `src/app.ts` and `src/server.ts`.
+- [x] Create `backend/src/app.ts` and `backend/src/server.ts`.
 - [x] Add `GET /health` returning `{"status":"ok"}`.
 - [x] Add an HTTP route test.
 
@@ -96,11 +103,11 @@ git check-ignore globalb2bdataset.csv
 - [x] Replace the temporary native HTTP server with `express()` and `app.listen()`.
 - [x] Compile and run the route and mapper tests.
 
-**Acceptance:** `npm run check`, `npm run build`, and `npm test` pass (4 tests).
+**Acceptance:** `npm run check --prefix backend`, `npm run build --prefix backend`, and `npm test --prefix backend` pass (4 tests).
 
 ### F04: Configuration validation [x]
 
-- [x] Add `.env.example` with a placeholder `PORT`; load local `.env` settings when present.
+- [x] Add `backend/.env.example` with a placeholder `PORT`; load local `.env` settings when present.
 - [x] Validate `PORT` as a whole number from 1 through 65535; report invalid values clearly at startup.
 - [x] Keep actual settings outside Git; test default, valid, and invalid port values.
 
@@ -114,26 +121,32 @@ git check-ignore globalb2bdataset.csv
 
 **Acceptance:** Malformed JSON returns 400, oversized bodies return 413, unknown paths return 404, and unexpected errors return a generic 500. All four HTTP checks pass.
 
-### C02: React client and visual foundation [ ]
+### C02: React frontend and visual foundation [ ]
 
-- [ ] Create a `client/` React + TypeScript app with its own npm scripts.
-- [ ] Add routing, a shared API client, and a development proxy forwarding `/api` and `/health` to Express with session cookies.
-- [ ] Define the typography, color, spacing, button, input, and layout styles from the visual direction.
-- [ ] Show a simple API connection status using the real health route.
+- [x] Create a `frontend/` React + TypeScript app with its own npm scripts.
+- [x] Add routing, a shared API client, and a development proxy forwarding `/api` and `/health` to Express with session cookies.
+- [x] Configure Tailwind and define typography, color, spacing, button, input, and layout styles from the visual direction.
+- [x] Show a simple API connection status using the real health route.
 
-**Acceptance:** Client builds and connects to Express through the development proxy.
+**Acceptance:** The frontend builds with Tailwind and its development proxy reaches Express. The browser review is pending.
 
-**Your browser test:** Open the client, confirm the API status, resize to a phone width, and tab through the controls. Stop Express and confirm a useful connection error appears. Review the visual style before more screens are added.
+**Your browser test:** Open the frontend, confirm the API status, resize to a phone width, and tab through the controls. Stop Express and confirm a useful connection error appears. Review the visual style before more screens are added.
 
-**Phase check (client commands become available in C02):**
+**Phase check:**
 
 ```powershell
-npm run check
-npm test
-npm run build
-npm run build --prefix client
-# In separate terminals: npm run dev ; npm run dev --prefix client
-# Browser: check API status, disconnected state, keyboard focus, and mobile layout
+Push-Location .\backend
+npm install
+Pop-Location
+Push-Location .\frontend
+npm install
+Pop-Location
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
+# Start each dev command in a separate terminal and open http://127.0.0.1:5173.
+# Check API status, retry, disconnected state, keyboard focus, mobile layout, and unknown route.
 ```
 
 ## Phase 2: PostgreSQL, leads, and authentication
@@ -153,7 +166,7 @@ npm run build --prefix client
 
 ### D03: Connect PostgreSQL [ ]
 
-- [ ] Install the PostgreSQL client dependency and add `DATABASE_URL` to `.env.example`.
+- [ ] Install the PostgreSQL client dependency and add `DATABASE_URL` to `backend/.env.example`.
 - [ ] Create a connection pool in one backend module.
 - [ ] Add a read-only `db:check` script and a clear error for a bad URL.
 
@@ -335,15 +348,15 @@ npm run build --prefix client
 ```powershell
 docker compose up -d db  # planned in DB01
 docker compose ps
-npm run db:check       # planned in D03
-npm run db:migrate     # planned in D04
-npm run db:seed        # planned in D05
-npm run auth:seed      # planned in AU02
-npm run test:db        # planned in DB02
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:check --prefix backend       # planned in D03
+npm run db:migrate --prefix backend     # planned in D04
+npm run db:seed --prefix backend        # planned in D05
+npm run auth:seed --prefix backend      # planned in AU02
+npm run test:db --prefix backend        # planned in DB02
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 # Manually: login -> /api/auth/me -> list a lead -> logout -> /api/auth/me returns 401
 # When finished: docker compose stop db (keeps the data volume)
 ```
@@ -423,11 +436,11 @@ npm run build --prefix client
 **Phase check:**
 
 ```powershell
-npm run db:migrate
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:migrate --prefix backend
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 # Manually: login -> create profile -> generate ICP with configured model -> read/select ICP
 ```
 
@@ -511,11 +524,11 @@ npm run build --prefix client
 **Phase check:**
 
 ```powershell
-npm run db:migrate
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:migrate --prefix backend
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 # Manually: selected ICP -> candidate route -> qualification -> inspect review item
 ```
 
@@ -575,12 +588,12 @@ npm run build --prefix client
 **Phase check (ingest script planned in R03):**
 
 ```powershell
-npm run db:migrate
-npm run knowledge:ingest
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:migrate --prefix backend
+npm run knowledge:ingest --prefix backend
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 ```
 
 ## Phase 6: LangGraph workflow and tools
@@ -656,11 +669,11 @@ npm run build --prefix client
 **Phase check:**
 
 ```powershell
-npm run db:migrate
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:migrate --prefix backend
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 # Manually: start workflow -> inspect run -> review uncertain lead -> inspect resumed run
 ```
 
@@ -761,11 +774,11 @@ npm run build --prefix client
 **Phase check:**
 
 ```powershell
-npm run db:migrate
-npm run check
-npm test
-npm run build
-npm run build --prefix client
+npm run db:migrate --prefix backend
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
 # Manually: generate -> review -> simulate -> submit Unsubscribe -> verify new draft blocked
 ```
 
@@ -807,15 +820,14 @@ npm run build --prefix client
 
 **Acceptance / Your browser test:** Walk through login to simulated reply on desktop and phone widths. Report any unreadable, confusing, or inaccessible control before the final rehearsal.
 
-**Phase check (client scripts already available from phase 1):**
+**Phase check (frontend scripts already available from phase 1):**
 
 ```powershell
-npm run check
-npm test
-npm run build
-npm install --prefix client
-npm run build --prefix client
-# In separate terminals: npm run dev ; npm run dev --prefix client
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
+# In separate terminals: # Start in separate terminals: npm run dev --prefix backend ; npm run dev --prefix frontend
 # Manually: login -> profile -> ICP -> leads -> draft review -> dashboard -> logout
 ```
 
@@ -851,7 +863,7 @@ npm run build --prefix client
 
 - [ ] Add a GitHub Actions workflow for lockfile-based installation, type checking, tests, and build.
 - [ ] Run database integration checks against an isolated pgvector database service.
-- [ ] Add the client build once the React app exists; keep model credentials out of test jobs.
+- [ ] Add the frontend build; keep model credentials out of test jobs.
 
 **Acceptance:** A pushed commit shows passing automated checks without paid model access.
 
@@ -882,12 +894,12 @@ npm run build --prefix client
 **Phase check (scripts created in E01 and P01):**
 
 ```powershell
-npm run check
-npm test
-npm run build
-npm run build --prefix client
-npm run eval:leads
-npm run demo:seed
+npm run check --prefix backend
+npm test --prefix backend
+npm run build --prefix backend
+npm run build --prefix frontend
+npm run eval:leads --prefix backend
+npm run demo:seed --prefix backend
 # Manually repeat the full flow in P02 and compare results with the report
 ```
 

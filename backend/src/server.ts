@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { loadEnvFile } from "node:process";
-import { buildApp } from "./app.js";
-import { loadConfig } from "./config.js";
+import { buildApp } from "./app.ts";
+import { loadConfig } from "./config.ts";
 
 let port: number;
 try {

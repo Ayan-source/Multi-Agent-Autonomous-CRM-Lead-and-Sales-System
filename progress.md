@@ -13,7 +13,6 @@
 | 2026-11-21 | Shortened this progress log. |
 | Plan review | Approved Docker database; added missing API, review, graph, test, and manual push checkpoints. |
 | Frontend plan | Moved screens alongside features; added browser tests and a minimal visual direction. |
+| C02 | Fixed Node watch startup and restored the Tailwind stylesheet. Both apps start, the frontend builds, the health proxy responds, and 11 API tests pass. |
 
-**Next:** C02 — React shell and visual foundation, after F05 review.
-
-**Issue:** Development watch script remains unverified in this workspace (`os.userInfo()` error).
+**Next:** Review C02 in a browser. Headless Edge could not render in this workspace.

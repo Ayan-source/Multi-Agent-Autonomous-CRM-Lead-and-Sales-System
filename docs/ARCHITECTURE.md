@@ -2,7 +2,7 @@
 
 ## Current implementation
 
-`src/app.ts` defines an Express app with `GET /health`, a 100 KB JSON body limit, and consistent JSON errors for malformed input, unknown paths, oversized bodies, and unexpected errors. `src/server.ts` loads `.env` when present, validates the port, and starts the server on localhost. `src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. HTTP tests check routes and error handling; `test/lead-mapping.test.ts` checks the mapper, and `test/config.test.ts` checks port settings. The repository has npm scripts, a dependency lockfile, and TypeScript configuration. There is no database connection, frontend, model call, agent framework, authentication, or production deployment.
+`backend/src/app.ts` defines an Express app with `GET /health`, a 100 KB JSON body limit, and consistent JSON errors for malformed input, unknown paths, oversized bodies, and unexpected errors. `backend/src/server.ts` loads `.env` when present, validates the port, and starts the server on localhost. `backend/src/lead-mapping.ts` maps the five observed CSV fields to a validated `LeadInput` using only synthetic test fixtures. HTTP tests check routes and error handling; `backend/test/lead-mapping.test.ts` checks the mapper, and `backend/test/config.test.ts` checks port settings. The repository has separate npm projects in `backend/` and `frontend/`, each with its own dependencies and scripts. The frontend uses React, Vite, React Router, and Tailwind for a responsive overview with routing and a live health check. There is no database connection, model call, agent framework, authentication, or production deployment.
 
 ## Intended system
 
@@ -12,10 +12,10 @@ Use Docker Compose for PostgreSQL with pgvector, with a versioned image, named p
 
 Use a separate database for integration tests. Run migrations before seeding; record applied migrations and avoid resetting development data during tests.
 
-Build the React shell in phase 1 and add each feature screen alongside its backend routes. Login, session restoration, logout, and lead CRUD become browser-testable in phase 2; subsequent phases add their own screens. Use a shared API client and a development proxy so session cookies work through the client origin. Each UI task includes a user browser checkpoint; phase 8 completes the dashboard and visual polish. The visual style uses warm neutral surfaces, dark text, a deep teal accent, focused forms, practical tables, and consistent spacing. Support keyboard navigation and narrow screens from the initial shell.
+Build the React shell in phase 1 and add each feature screen alongside its backend routes. Login, session restoration, logout, and lead CRUD become browser-testable in phase 2; subsequent phases add their own screens. Use a shared API client and a Vite development proxy from the frontend to the backend so session cookies work through the frontend origin. Each UI task includes a user browser checkpoint; phase 8 completes the dashboard and visual polish. Tailwind utilities provide the warm neutral surfaces, dark text, deep teal accent, focused forms, practical tables, and consistent spacing. Support keyboard navigation and narrow screens from the initial shell.
 
 ```text
-React dashboard (planned)
+React frontend shell (exists; feature screens planned)
        |
 TypeScript HTTP API (minimal foundation exists)
        |
@@ -28,7 +28,7 @@ PostgreSQL CRM records + workflow history (planned)
 pgvector business-document retrieval for grounded drafts (planned)
 ```
 
-Use one Node/TypeScript backend for routes, validation, authentication, deterministic business logic, and model/tool adapters. A React dashboard is the proposed client; choose its tooling when the dashboard task starts. PostgreSQL with pgvector is the selected storage direction: relational tables hold authoritative CRM state, while vector search later retrieves relevant business text. Do not put ordinary lead status or workflow state into embeddings. PostgreSQL setup and extension availability still need verification.
+Use one Node/TypeScript backend for routes, validation, authentication, deterministic business logic, and model/tool adapters. The React frontend uses Vite and React Router; its feature screens are added alongside backend routes. PostgreSQL with pgvector is the selected storage direction: relational tables hold authoritative CRM state, while vector search later retrieves relevant business text. Do not put ordinary lead status or workflow state into embeddings. PostgreSQL setup and extension availability still need verification.
 
 The demo will have one seeded sales-manager account, password hashes, and server-side sessions carried by an HTTP-only cookie. Planned routes are `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`; CRM and workflow routes require a session. There is no public registration route. This is a proposed design, not implemented authentication.
 

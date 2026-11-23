@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, "Segoe UI", sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-width: 320px;
+    min-height: 100%;
+    background: #f5f5f1;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Inter, "Segoe UI", sans-serif;
+    color: #172c2a;
+    background: #f5f5f1;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a,
+  button {
+    font: inherit;
+  }
+
+  a:focus-visible,
+  button:focus-visible {
+    outline: 3px solid #e09a6f;
+    outline-offset: 3px;
+  }
+}
